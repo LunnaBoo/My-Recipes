@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# expo
+.expo/
+dist/
+web-build/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# native builds
+android/.gradle/
+android/app/build/
+android/local.properties
+ios/Pods/
+
+# cloudflare local state
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# secrets and artifacts
+*.apk
+*.aab
+.env
+.env.*
+!.env.example
+backups/
+*.zip
+
+# editors / os
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# logs
+npm-debug.log*
+yarn-error.log*
+
+# signing material — never commit
+credentials/
+credentials.json
+keystore-password.txt

@@ -1,0 +1,17 @@
+{
+  "name": "myrecipes-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker for My Recipes: short recipe links, App Links, and APK distribution.",
+  "scripts": {
+    "dev": "wrangler dev --port 8787 --ip 127.0.0.1",
+    "check": "tsc --noEmit",
+    "smoke": "bash test/smoke.sh"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.157.0"
+  }
+}

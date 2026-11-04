@@ -1,0 +1,13 @@
+# Local development overrides for `wrangler dev`.
+# Copy this file to `.dev.vars` (it is gitignored by convention).
+#
+# `.dev.vars` takes precedence over the `vars` block in wrangler.jsonc.
+# Never commit the real key.
+
+APP_KEY=dev-only-change-me
+
+# Optional overrides:
+# APK_URL="https://example.com/MyRecipes.apk"
+# ASSETLINKS_JSON="[]"
+# VERSION_JSON="{\"versionCode\":1,\"versionName\":\"1.0.0\",\"url\":\"\",\"notes\":\"\"}"
+# SITE_NAME="My Recipes"

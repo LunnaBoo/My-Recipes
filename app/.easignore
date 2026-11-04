@@ -1,0 +1,13 @@
+node_modules/
+.expo/
+dist/
+web-build/
+android/
+ios/
+credentials/
+credentials.json
+keystore-password.txt
+*.jks
+*.apk
+*.aab
+*.log

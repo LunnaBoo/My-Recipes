@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Recipes — Mockup de interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --parchment: #E8D9B8;
+      --cream: #F0E6CF;
+      --ink: #3A2A1A;
+      --ink-light: #6B5344;
+      --sage: #8A9A5B;
+      --sage-light: #9CAB6E;
+      --olive: #6B7A3A;
+      --olive-dark: #4A5A28;
+      --mauve: #8B6F8F;
+      --mauve-dark: #5F435F;
+      --tan: #C4A87A;
+      --tan-dark: #7A5F3A;
+      --gold: #D4A94A;
+      --leafy: #243320;
+      --leafy-deep: #1A2616;
+      --navy: #2F3B52;
+      --navy-dark: #202B40;
+      --maroon: #6E2F3F;
+      --photo-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='30%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23d4e4a0'/%3E%3Cstop offset='60%25' stop-color='%236b9e5e'/%3E%3Cstop offset='100%25' stop-color='%233d6b3a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23g)'/%3E%3Cellipse cx='30' cy='70' rx='25' ry='18' fill='%234a7a3f' opacity='0.6' transform='rotate(-20 30 70)'/%3E%3Cellipse cx='70' cy='60' rx='28' ry='20' fill='%235a8a4a' opacity='0.5' transform='rotate(15 70 60)'/%3E%3Cellipse cx='50' cy='35' rx='18' ry='14' fill='%23b8d46e' opacity='0.4'/%3E%3Ccircle cx='45' cy='40' r='5' fill='%23e8c46b' opacity='0.7'/%3E%3Ccircle cx='60' cy='55' r='4' fill='%23f0e6cf' opacity='0.5'/%3E%3C/svg%3E");
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 48px 24px;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(36,51,32,0) 0%, rgba(26,38,22,0.85) 100%),
+        linear-gradient(180deg, #2a3d25 0%, #1A2616 100%);
+      font-family: 'Source Serif 4', Georgia, serif;
+      color: var(--ink);
+    }
+
+    .page-title {
+      text-align: center;
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      color: var(--tan);
+      font-size: 15px;
+      margin: 0 0 40px;
+    }
+
+    .frames {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .frame-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .frame-note {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 180px;
+      line-height: 16px;
+    }
+
+    .frame-caption {
+      color: var(--cream);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: var(--leafy-deep);
+      border-radius: 44px;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.55),
+        0 0 0 12px #0f160d;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 12px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: var(--leafy);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #0f160d;
+      border-radius: 0 0 18px 18px;
+      z-index: 10;
+    }
+
+    .status-bar {
+      height: 44px;
+      flex-shrink: 0;
+      z-index: 5;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 8px 24px;
+      color: var(--cream);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .safe-bottom {
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    /* Grain overlay */
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: 20;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(26,38,22,0.55) 100%);
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      align-items: flex-end;
+      padding: 0 16px;
+      gap: 6px;
+      position: relative;
+    }
+
+    .tab {
+      min-width: 84px;
+      height: 38px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px 12px 0 0;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cream);
+      position: relative;
+      opacity: 0.72;
+      transform: translateY(6px);
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.25);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tab.active {
+      height: 48px;
+      opacity: 1;
+      transform: translateY(0);
+      box-shadow: none;
+      z-index: 2;
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -6px;
+      height: 6px;
+      background: inherit;
+    }
+
+    .tab-olive { background: var(--olive-dark); }
+    .tab-mauve { background: var(--mauve-dark); }
+    .tab-tan { background: var(--tan-dark); }
+
+    .tab-badge {
+      position: absolute;
+      top: 10px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--maroon);
+      color: var(--cream);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Source Serif 4', Georgia, serif;
+    }
+
+    .tab-space {
+      flex: 1;
+      height: 36px;
+      position: relative;
+    }
+
+    .shoulder-badge {
+      position: absolute;
+      right: 0;
+      bottom: 6px;
+      min-width: 34px;
+      height: 26px;
+      border-radius: 13px;
+      background: var(--parchment);
+      border: 1.5px solid var(--ink-light);
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+    }
+
+    /* Panel */
+    .panel {
+      flex: 1;
+      margin: 0 12px 12px;
+      background: var(--parchment);
+      border-radius: 18px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(26,38,22,0.25);
+    }
+
+    .panel::before,
+    .panel::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 18px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .panel::before {
+      top: 0;
+      background: var(--parchment);
+      clip-path: polygon(0% 80%, 4% 55%, 9% 78%, 14% 50%, 19% 75%, 25% 55%, 31% 78%, 37% 52%, 43% 76%, 49% 56%, 55% 79%, 61% 53%, 67% 77%, 73% 55%, 79% 78%, 85% 52%, 91% 75%, 96% 58%, 100% 80%, 100% 100%, 0% 100%);
+    }
+
+    .panel::after {
+      bottom: 0;
+      background: var(--parchment);
+      clip-path: polygon(0% 20%, 4% 45%, 9% 22%, 14% 50%, 19% 25%, 25% 45%, 31% 22%, 37% 48%, 43% 24%, 49% 44%, 55% 21%, 61% 47%, 67% 23%, 73% 45%, 79% 22%, 85% 48%, 91% 25%, 96% 42%, 100% 20%, 100% 0%, 0% 0%);
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 18px 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Ivy corner */
+    .ivy-corner {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .ivy-corner.tl { top: 10px; left: 10px; }
+    .ivy-corner.tr { top: 10px; right: 10px; transform: scaleX(-1); }
+    .ivy-corner.bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+    .ivy-corner.br { bottom: 10px; right: 10px; transform: scaleX(-1) scaleY(-1); }
+
+    /* Section header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 6px 0 16px;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .flourish {
+      width: 38px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    /* Search */
+    .search {
+      width: 100%;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      padding: 0 14px;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 15px;
+      color: var(--ink);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .search-placeholder {
+      color: var(--ink-light);
+      font-style: italic;
+    }
+
+    /* List rows */
+    .list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .row {
+      position: relative;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(107,83,68,0.2);
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .row.pressed {
+      background: var(--sage-light);
+      border-radius: 10px;
+      border-bottom-color: transparent;
+      margin: 0 -4px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .row-title {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 22px;
+      color: var(--ink);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .row-excerpt {
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--ink-light);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .row-meta {
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--ink-light);
+      text-align: right;
+    }
+
+    .pin-sparkle {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* FAB */
+    .fab {
+      position: absolute;
+      right: 22px;
+      bottom: 32px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--olive-dark);
+      border: 2px solid rgba(58,42,26,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cream);
+      font-size: 30px;
+      font-weight: 400;
+      z-index: 5;
+      box-shadow: 0 6px 18px rgba(26,38,22,0.35);
+    }
+
+    /* Seal component */
+    .seal {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 50%;
+    }
+
+    .seal-lg { width: 80px; height: 80px; }
+    .seal-sm { width: 30px; height: 30px; }
+    .seal-preview { width: 96px; height: 96px; }
+
+    .seal-disc {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--navy);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seal-photo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-image: var(--photo-url);
+      background-size: cover;
+      background-position: center;
+    }
+
+    .seal-sigil {
+      width: 62%;
+      height: 62%;
+      color: var(--cream);
+    }
+
+    .seal-rim {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Recipe view */
+    .recipe-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      line-height: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .recipe-meta {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-light);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .recipe-import-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.25);
+      border-radius: 8px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: var(--ink-light);
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 8px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold);
+      width: 28px;
+      flex-shrink: 0;
+      text-align: right;
+      line-height: 24px;
+    }
+
+    .step-text {
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .step-text strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      padding: 12px 0 4px;
+      border-top: 1px solid rgba(107,83,68,0.25);
+      position: sticky;
+      bottom: 0;
+      background: var(--parchment);
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      height: 44px;
+      min-width: 80px;
+      padding: 0 16px;
+      border-radius: 22px;
+      border: 1.5px solid transparent;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: var(--olive-dark);
+      color: var(--cream);
+      border-color: var(--olive-dark);
+    }
+
+    .btn-secondary {
+      background: var(--parchment);
+      color: var(--ink);
+      border-color: rgba(107,83,68,0.45);
+    }
+
+    .btn-danger {
+      background: var(--parchment);
+      color: var(--maroon);
+      border-color: var(--maroon);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Editor */
+    .editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .toggle {
+      display: flex;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      border-radius: 20px;
+      overflow: hidden;
+      height: 36px;
+      flex-shrink: 0;
+    }
+
+    .toggle-option {
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      cursor: pointer;
+    }
+
+    .toggle-option.active {
+      background: var(--olive-dark);
+      color: var(--cream);
+    }
+
+    .input-title {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .tool {
+      min-width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .textarea-body {
+      width: 100%;
+      flex: 1;
+      min-height: 180px;
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 17px;
+      line-height: 26px;
+      color: var(--ink);
+      resize: none;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .textarea-body::selection {
+      background: rgba(138,154,91,0.45);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Import preview letter */
+    .letter-panel {
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      border-radius: 12px;
+      padding: 0 18px 22px;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .letter-seal {
+      display: block;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 12px;
+    }
+
+    .letter-from {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin: 0 0 12px;
+    }
+
+    .letter-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 700;
+      color: var(--ink);
+      text-align: center;
+      margin: 0 0 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .letter-meta {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-light);
+      margin-bottom: 14px;
+    }
+
+    .letter-preview {
+      font-size: 15px;
+      line-height: 22px;
+      color: var(--ink);
+      opacity: 0.9;
+    }
+
+    /* Empty state */
+    .empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 14px;
+    }
+
+    .empty-wreath {
+      width: 120px;
+      height: 120px;
+      opacity: 0.65;
+    }
+
+    .empty-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .empty-body {
+      font-size: 15px;
+      line-height: 22px;
+      color: var(--ink-light);
+      max-width: 240px;
+    }
+
+    /* Toaster demo */
+    .toast {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      background: var(--leafy);
+      border: 1px solid rgba(240,230,207,0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--cream);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 8;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+
+    .toast-action {
+      color: var(--gold);
+      font-weight: 700;
+      text-decoration: underline;
+      margin-left: 12px;
+    }
+
+    /* Seu selo screen */
+    .seal-preview-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 8px;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.35);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 16px;
+      color: var(--ink);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sigil-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .sigil-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .sigil-option .seal {
+      width: 56px;
+      height: 56px;
+    }
+
+    .sigil-option.selected .seal {
+      box-shadow: 0 0 0 3px var(--gold);
+    }
+
+    .sigil-option-label {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+    }
+
+    .photo-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.3);
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .photo-option .seal {
+      width: 56px;
+      height: 56px;
+    }
+
+    .photo-option-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .photo-option-hint {
+      font-size: 12px;
+      color: var(--ink-light);
+      margin-top: 2px;
+    }
+
+    /* Scrollbars */
+    .panel-content::-webkit-scrollbar { width: 4px; }
+    .panel-content::-webkit-scrollbar-thumb { background: rgba(107,83,68,0.35); border-radius: 2px; }
+
+    @media (max-width: 860px) {
+      .frames { gap: 32px; }
+      .phone { transform: scale(0.92); transform-origin: top center; }
+      .frame-wrap { height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">My Recipes</h1>
+  <p class="page-subtitle">Mockup de direção visual · telas em 390 × 844 · pt-BR</p>
+
+  <!-- Shared SVG assets -->
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <defs>
+      <symbol id="sigil-cat" viewBox="0 0 48 48">
+        <path d="M14,38 L14,28 C14,20 20,14 28,14 L34,10 L34,20 C38,22 40,26 40,30 C40,38 32,42 24,42 C20,42 16,40 14,38 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="20" cy="28" r="2.2" fill="currentColor"/>
+        <circle cx="32" cy="28" r="2.2" fill="currentColor"/>
+        <path d="M24,32 Q26,35 24,38 Q22,35 24,32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M18,20 L22,24 M30,24 L34,20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="sigil-moon" viewBox="0 0 48 48">
+        <path d="M28,8 C20,8 14,16 14,26 C14,36 20,44 28,44 C32,44 36,42 38,40 C34,42 28,38 28,26 C28,14 34,10 38,12 C36,10 32,8 28,8 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="sigil-sun" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <path d="M24,6 L24,10 M24,38 L24,42 M6,24 L10,24 M38,24 L42,24 M12,12 L15,15 M33,33 L36,36 M12,36 L15,33 M33,15 L36,12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="sigil-star" viewBox="0 0 48 48">
+        <path d="M24,6 L28,18 L40,18 L30,26 L34,40 L24,32 L14,40 L18,26 L8,18 L20,18 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="sigil-mushroom" viewBox="0 0 48 48">
+        <path d="M24,40 L24,26 M16,40 L32,40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M8,26 C8,16 16,8 24,8 C32,8 40,16 40,26 C40,28 38,30 36,30 L12,30 C10,30 8,28 8,26 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="16" cy="20" r="2" fill="currentColor"/>
+        <circle cx="30" cy="18" r="1.6" fill="currentColor"/>
+        <circle cx="36" cy="24" r="1.3" fill="currentColor"/>
+      </symbol>
+      <symbol id="sigil-owl" viewBox="0 0 48 48">
+        <path d="M16,18 Q24,10 32,18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M13,14 L15,20 M35,20 L37,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="19" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="29" cy="24" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="19" cy="24" r="1.5" fill="currentColor"/>
+        <circle cx="29" cy="24" r="1.5" fill="currentColor"/>
+        <path d="M24,29 L21,34 L27,34 Z" fill="currentColor"/>
+      </symbol>
+      <symbol id="rim" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="38" fill="none" stroke="var(--navy-dark)" stroke-width="2"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="frames">
+    <!-- HOME LIST -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="tab-bar">
+            <div class="tab tab-olive active">Receitas</div>
+            <div class="tab tab-mauve">Lixeira</div>
+            <div class="tab tab-tan">Ajustes</div>
+            <div class="tab-space"><div class="shoulder-badge">2</div></div>
+          </div>
+
+          <div class="panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+            <svg class="ivy-corner tr" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+
+            <div class="panel-content">
+              <div class="search"><span style="font-size:16px">⌕</span><span class="search-placeholder">Buscar receitas…</span></div>
+
+              <div class="section-header">
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+                <div class="section-title">Receitas</div>
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+              </div>
+
+              <div class="list">
+                <div class="row">
+                  <div class="row-title">GUIA: COMO PREPARAR FEIJÃO CARIOCA PERFEITO</div>
+                  <div class="row-excerpt">Deixe o feijão de molho em água fria por 8 horas. Escorra e transfira para a panela de pressão com louro e bacon.</div>
+                  <div class="row-meta">12 passos</div>
+                  <svg class="pin-sparkle" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12,2 L13.8,9.2 L21,12 L13.8,14.8 L12,22 L10.2,14.8 L3,12 L10.2,9.2 Z" fill="#D4A94A" stroke="#3A2A1A" stroke-width="1.2"/>
+                  </svg>
+                </div>
+
+                <div class="row pressed">
+                  <div class="row-title">Bolo de cenoura com cobertura de chocolate</div>
+                  <div class="row-excerpt">Rale 3 cenouras médias e bata no liquidificador com ovos e óleo.</div>
+                  <div class="row-meta">8 passos</div>
+                </div>
+
+                <div class="row">
+                  <div class="row-title">Risoto de funghi</div>
+                  <div class="row-excerpt">Hidrate os cogumelos secos em água morna. Refogue a cebola no azeite, adicione o arroz arbóreo e mexa até ficar translúcido.</div>
+                  <div class="row-meta">10 passos</div>
+                </div>
+
+                <div class="row">
+                  <div class="row-title">Sopa de legumes</div>
+                  <div class="row-excerpt">Corte todos os legumes em cubos iguais e cozinhe em caldo caseiro.</div>
+                  <div class="row-meta">6 passos</div>
+                </div>
+
+                <div class="row">
+                  <div class="row-title">Pão de queijo mineiro</div>
+                  <div class="row-excerpt">Polvilho doce, polvilho azedo, queijo meia-cura ralado e leite morno.</div>
+                  <div class="row-meta">5 passos</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fab">+</div>
+
+            <div class="toast">
+              <span>Receita movida para a lixeira</span>
+              <span class="toast-action">Desfazer</span>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Linha pressionada · estrela fixada · título longo em 2 linhas</div>
+      <div class="frame-caption">Lista inicial</div>
+    </div>
+
+    <!-- RECIPE VIEW -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="tab-bar">
+            <div class="tab tab-olive active">Receitas</div>
+            <div class="tab tab-mauve">Lixeira</div>
+            <div class="tab tab-tan">Ajustes</div>
+            <div class="tab-space"></div>
+          </div>
+
+          <div class="panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+
+            <div class="panel-content" style="display:flex; flex-direction:column;">
+              <div class="section-header">
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+                <div class="section-title">Receita</div>
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+              </div>
+
+              <h1 class="recipe-title">GUIA: COMO PREPARAR FEIJÃO CARIOCA PERFEITO</h1>
+              <div class="recipe-meta">
+                <div class="seal seal-sm">
+                  <div class="seal-disc"><div class="seal-photo"></div></div>
+                  <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                </div>
+                <span>Carta de Lucas · 12 passos</span>
+              </div>
+
+              <div class="steps">
+                <div class="step"><span class="step-number">1.</span><span class="step-text">Deixe o feijão de molho em água fria por 8 horas.</span></div>
+                <div class="step"><span class="step-number">2.</span><span class="step-text">Escorra e transfira para a panela de pressão.</span></div>
+                <div class="step"><span class="step-number">3.</span><span class="step-text">Adicione 1 folha de louro e meio caldo de bacon.</span></div>
+                <div class="step"><span class="step-number">4.</span><span class="step-text">Cubra com 2 dedos de água acima do feijão.</span></div>
+                <div class="step"><span class="step-number">5.</span><span class="step-text">Tampe e leve ao fogo médio por 25 minutos após a pressão começar.</span></div>
+                <div class="step"><span class="step-number">6.</span><span class="step-text">Desligue, espere sair a pressão naturalmente e abra a tampa.</span></div>
+              </div>
+
+              <div class="action-bar">
+                <button class="btn btn-primary">Enviar</button>
+                <button class="btn btn-secondary">Copiar</button>
+                <button class="btn btn-secondary">Editar</button>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Título limitado a 2 linhas · selo pequeno no cabeçalho · barra de ações visível</div>
+      <div class="frame-caption">Visualização da receita</div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="tab-bar">
+            <div class="tab tab-olive active">Receitas</div>
+            <div class="tab tab-mauve">Lixeira</div>
+            <div class="tab tab-tan">Ajustes</div>
+            <div class="tab-space"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-content" style="display:flex; flex-direction:column;">
+              <div class="editor-header">
+                <div class="section-title" style="margin:0">Editar</div>
+                <div class="toggle">
+                  <div class="toggle-option active">Editar</div>
+                  <div class="toggle-option">Pré-visualizar</div>
+                </div>
+              </div>
+
+              <div class="input-title">GUIA: COMO PREPARAR FEIJÃO CARIOCA PERFEITO</div>
+
+              <div class="toolbar">
+                <div class="tool">B</div>
+                <div class="tool">I</div>
+                <div class="tool">H1</div>
+                <div class="tool">1.</div>
+                <div class="tool">☐</div>
+                <div class="tool">—</div>
+              </div>
+
+              <textarea class="textarea-body" spellcheck="false">1. Deixe o feijão de molho em água fria por 8 horas.
+2. Escorra e transfira para a panela de pressão.
+3. Adicione 1 folha de louro e meio caldo de bacon.
+4. Cubra com 2 dedos de água acima do feijão.
+5. Tampe e leve ao fogo médio por 25 minutos após a pressão começar.
+6. Desligue, espere sair a pressão naturalmente e abra a tampa.</textarea>
+
+              <div class="editor-actions">
+                <button class="btn btn-secondary">Cancelar</button>
+                <button class="btn btn-primary" disabled>Salvar</button>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Botão Salvar desabilitado · barra de ferramentas sem estouro</div>
+      <div class="frame-caption">Editor de receita</div>
+    </div>
+
+    <!-- IMPORT PREVIEW -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="tab-bar">
+            <div class="tab tab-olive active">Receitas</div>
+            <div class="tab tab-mauve">Lixeira</div>
+            <div class="tab tab-tan">Ajustes</div>
+            <div class="tab-space"></div>
+          </div>
+
+          <div class="panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+
+            <div class="panel-content" style="display:flex; flex-direction:column;">
+              <div class="section-header">
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+                <div class="section-title">Nova carta</div>
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+              </div>
+
+              <div class="letter-panel">
+                <div class="seal letter-seal">
+                  <div class="seal-disc"><div class="seal-photo"></div></div>
+                  <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                </div>
+                <div class="letter-from">Receita de Lucas</div>
+                <h2 class="letter-title">GUIA: COMO PREPARAR FEIJÃO CARIOCA PERFEITO</h2>
+                <div class="letter-meta">12 passos</div>
+                <div class="letter-preview">
+                  1. Deixe o feijão de molho em água fria por 8 horas.<br>
+                  2. Escorra e transfira para a panela de pressão.<br>
+                  3. Adicione 1 folha de louro e meio caldo de bacon.<br>
+                  4. Cubra com 2 dedos de água acima do feijão…
+                </div>
+              </div>
+
+              <div class="action-bar" style="border-top:none; position:static; background:transparent;">
+                <button class="btn btn-danger">Descartar</button>
+                <button class="btn btn-primary">Salvar</button>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Selo grande com foto personalizada · título limitado a 2 linhas · ações visíveis</div>
+      <div class="frame-caption">Pré-visualização de importação</div>
+    </div>
+
+    <!-- SEU SELO -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="tab-bar">
+            <div class="tab tab-olive">Receitas</div>
+            <div class="tab tab-mauve">Lixeira</div>
+            <div class="tab tab-tan active">Ajustes</div>
+            <div class="tab-space"></div>
+          </div>
+
+          <div class="panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true">
+              <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+              <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+              <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+              <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+              <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+            </svg>
+
+            <div class="panel-content" style="display:flex; flex-direction:column;">
+              <div class="section-header">
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+                <div class="section-title">Seu selo</div>
+                <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)">
+                  <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+                  <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+                  <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+                </svg>
+              </div>
+
+              <div class="seal-preview-wrap">
+                <div class="seal seal-preview">
+                  <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-cat"/></svg></div>
+                  <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                </div>
+              </div>
+
+              <div class="field-label">Nome de exibição</div>
+              <div class="text-input">Lucas</div>
+
+              <div class="field-label">Escolha um símbolo</div>
+              <div class="sigil-grid">
+                <div class="sigil-option selected">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-cat"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Gato</span>
+                </div>
+                <div class="sigil-option">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-moon"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Lua</span>
+                </div>
+                <div class="sigil-option">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-sun"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Sol</span>
+                </div>
+                <div class="sigil-option">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-star"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Estrela</span>
+                </div>
+                <div class="sigil-option">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-mushroom"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Cogumelo</span>
+                </div>
+                <div class="sigil-option">
+                  <div class="seal">
+                    <div class="seal-disc"><svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-owl"/></svg></div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <span class="sigil-option-label">Coruja</span>
+                </div>
+              </div>
+
+              <div class="field-label">Ou envie uma foto</div>
+              <div class="photo-option">
+                <div class="seal">
+                  <div class="seal-disc"><div class="seal-photo"></div></div>
+                  <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                </div>
+                <div>
+                  <div class="photo-option-label">Enviar imagem</div>
+                  <div class="photo-option-hint">Foto escolhida: 256 × 256</div>
+                </div>
+              </div>
+
+              <div class="action-bar" style="border-top:none; position:static; background:transparent; margin-top:auto;">
+                <button class="btn btn-secondary">Cancelar</button>
+                <button class="btn btn-primary">Salvar</button>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Prévia do selo · sigilo selecionado · foto dentro da borda de cera</div>
+      <div class="frame-caption">Tela "Seu selo"</div>
+    </div>
+  </div>
+
+  <div style="max-width:720px; margin:48px auto 0; color:var(--cream); font-size:14px; line-height:22px; opacity:0.85;">
+    <p><strong>Observações de estado mostradas:</strong> aba “Receitas” ativa com face continuando no painel; abas inativas mais baixas e recuadas; linha pressionada em verde-sálvia; estrela dourada indicando receita fixada; título longo limitado a duas linhas; botão Salvar desabilitado no editor; selo com foto personalizada na carta de importação.</p>
+  </div>
+</body>
+</html>

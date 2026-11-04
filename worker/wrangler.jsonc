@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "myrecipes",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-04",
+  "kv_namespaces": [
+    {
+      "binding": "RECIPES",
+      "id": "c4c5e398294146cdb924d67f07895d4d"
+    }
+  ],
+  "routes": [
+    { "pattern": "r.lunna.boo", "custom_domain": true }
+  ],
+  "vars": {
+    // The production write key is a secret, not a var:
+    //   printf '%s' "$(openssl rand -hex 32)" | npx wrangler secret put APP_KEY
+    // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
+    "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
+    "APK_URL": "https://expo.dev/artifacts/eas/7kp_T-U7UQRKRP052kc8xkk48lkBhCEKelJXxGLDTRc.apk",
+    "VERSION_JSON": "{\"versionCode\":1,\"versionName\":\"1.0.0\",\"url\":\"https://expo.dev/artifacts/eas/7kp_T-U7UQRKRP052kc8xkk48lkBhCEKelJXxGLDTRc.apk\",\"notes\":\"Primeira versao: lista, editor, importacao por link.\"}",
+    "SITE_NAME": "My Recipes"
+  }
+}

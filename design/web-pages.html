@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Recipes — Web pages</title>
+  <style>
+    :root {
+      --parchment: #E8D9B8;
+      --cream: #F0E6CF;
+      --ink: #3A2A1A;
+      --ink-light: #6B5344;
+      --sage: #8A9A5B;
+      --sage-light: #9CAB6E;
+      --olive: #6B7A3A;
+      --olive-dark: #4A5A28;
+      --gold: #D4A94A;
+      --leafy: #243320;
+      --leafy-deep: #1A2616;
+      --navy: #2F3B52;
+      --navy-dark: #202B40;
+      --maroon: #6E2F3F;
+      --tan: #C4A87A;
+
+      /* System serif stack mandated by CSP (no external fonts). */
+      --font-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+      --font-ui-serif: ui-serif, Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      padding: 48px 24px 80px;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(36,51,32,0) 0%, rgba(26,38,22,0.9) 100%),
+        linear-gradient(180deg, #2a3d25 0%, #1A2616 100%);
+      font-family: var(--font-serif);
+      color: var(--ink);
+    }
+
+    .page-title {
+      text-align: center;
+      color: var(--cream);
+      font-family: var(--font-ui-serif);
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      color: var(--tan);
+      font-size: 15px;
+      line-height: 22px;
+      margin: 0 0 40px;
+    }
+
+    .frames {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .frame-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .frame-note {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 200px;
+      line-height: 16px;
+    }
+
+    .frame-caption {
+      color: var(--cream);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    /* Phone frame */
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: var(--leafy-deep);
+      border-radius: 44px;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.55),
+        0 0 0 12px #0f160d;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 12px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: var(--leafy);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 28px;
+      background: #0f160d;
+      border-radius: 0 0 18px 18px;
+      z-index: 10;
+    }
+
+    .status-bar {
+      height: 44px;
+      flex-shrink: 0;
+      z-index: 5;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 8px 24px;
+      color: var(--cream);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .safe-bottom {
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    /* Grain overlay (single panel-level texture only) */
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      z-index: 20;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(26,38,22,0.55) 100%);
+    }
+
+    /* Parchment panel used by all web pages */
+    .page-panel {
+      flex: 1;
+      margin: 12px;
+      background: var(--parchment);
+      border-radius: 18px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(26,38,22,0.25);
+    }
+
+    .page-panel::before,
+    .page-panel::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 18px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .page-panel::before {
+      top: 0;
+      background: var(--parchment);
+      clip-path: polygon(0% 80%, 4% 55%, 9% 78%, 14% 50%, 19% 75%, 25% 55%, 31% 78%, 37% 52%, 43% 76%, 49% 56%, 55% 79%, 61% 53%, 67% 77%, 73% 55%, 79% 78%, 85% 52%, 91% 75%, 96% 58%, 100% 80%, 100% 100%, 0% 100%);
+    }
+
+    .page-panel::after {
+      bottom: 0;
+      background: var(--parchment);
+      clip-path: polygon(0% 20%, 4% 45%, 9% 22%, 14% 50%, 19% 25%, 25% 45%, 31% 22%, 37% 48%, 43% 24%, 49% 44%, 55% 21%, 61% 47%, 67% 23%, 73% 45%, 79% 22%, 85% 48%, 91% 25%, 96% 42%, 100% 20%, 100% 0%, 0% 0%);
+    }
+
+    .page-content {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .page-scroll {
+      flex: 1 0 auto;
+      padding: 32px 20px 80px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .page-scroll.centered {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .page-content::-webkit-scrollbar { width: 4px; }
+    .page-content::-webkit-scrollbar-thumb { background: rgba(107,83,68,0.35); border-radius: 2px; }
+
+    /* Ivy corners */
+    .ivy-corner {
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .ivy-corner.tl { top: 10px; left: 10px; }
+    .ivy-corner.tr { top: 10px; right: 10px; transform: scaleX(-1); }
+    .ivy-corner.bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+    .ivy-corner.br { bottom: 10px; right: 10px; transform: scaleX(-1) scaleY(-1); }
+
+    /* Typography: Georgia tuned to read like a storybook */
+    .web-section-title {
+      font-family: var(--font-ui-serif);
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink);
+      text-align: center;
+      margin: 0 0 6px;
+    }
+
+    .web-recipe-title {
+      font-family: var(--font-ui-serif);
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+      margin: 0 0 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .web-meta {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--ink-light);
+    }
+
+    .web-body {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 28px;
+      color: var(--ink);
+    }
+
+    .web-body strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .web-small {
+      font-size: 15px;
+      line-height: 22px;
+      color: var(--ink-light);
+    }
+
+    .web-caption {
+      font-size: 12px;
+      line-height: 18px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+    }
+
+    /* Section header with flourish */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 4px 0 22px;
+    }
+
+    .flourish {
+      width: 38px;
+      height: 14px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    /* Dividers */
+    .rule {
+      border: 0;
+      height: 1px;
+      background: rgba(107,83,68,0.25);
+      margin: 18px 0;
+    }
+
+    .rule-dotted {
+      border: 0;
+      height: 1px;
+      background: repeating-linear-gradient(90deg, rgba(107,83,68,0.35), rgba(107,83,68,0.35) 4px, transparent 4px, transparent 8px);
+      margin: 18px 0;
+    }
+
+    /* Seal */
+    .seal {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 50%;
+    }
+
+    .seal-lg { width: 80px; height: 80px; }
+    .seal-sm { width: 30px; height: 30px; }
+
+    .seal-disc {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--navy);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seal-photo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .seal-sigil {
+      width: 58%;
+      height: 58%;
+      color: var(--cream);
+    }
+
+    .seal-rim {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Share page */
+    .share-seal-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .share-from {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 14px;
+    }
+
+    .share-head {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .share-meta {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      font-family: var(--font-ui-serif);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold);
+      width: 30px;
+      flex-shrink: 0;
+      text-align: right;
+      line-height: 26px;
+    }
+
+    .step-text {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 28px;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .step-text strong { font-weight: 700; }
+
+    /* Buttons */
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+      background: var(--parchment);
+      border-top: 1px solid rgba(107,83,68,0.25);
+      box-shadow: 0 -4px 12px rgba(26,38,22,0.08);
+      z-index: 3;
+    }
+
+    .action-bar.single {
+      flex-direction: column;
+    }
+
+    .btn {
+      min-height: 48px;
+      min-width: 96px;
+      padding: 0 18px;
+      border-radius: 24px;
+      border: 1.5px solid transparent;
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 1;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .btn-primary {
+      background: var(--olive-dark);
+      color: var(--cream);
+      border-color: var(--olive-dark);
+    }
+
+    .btn-secondary {
+      background: var(--parchment);
+      color: var(--ink);
+      border-color: rgba(107,83,68,0.45);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-light);
+      border-color: transparent;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-subtle {
+      background: var(--cream);
+      color: var(--ink);
+      border-color: rgba(107,83,68,0.25);
+    }
+
+    /* Install page */
+    .install-hero {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .install-hero .seal {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 10px;
+    }
+
+    .install-hero p {
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--ink);
+      margin: 0 auto;
+      max-width: 280px;
+    }
+
+    .install-steps {
+      counter-reset: install;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .install-step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 15px;
+      line-height: 22px;
+      color: var(--ink);
+    }
+
+    .install-step::before {
+      counter-increment: install;
+      content: counter(install) ".";
+      font-family: var(--font-ui-serif);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold);
+      width: 26px;
+      flex-shrink: 0;
+      text-align: right;
+      line-height: 22px;
+    }
+
+    .install-step-text {
+      flex: 1;
+      min-width: 0;
+      line-height: 22px;
+    }
+
+    .install-step-text em {
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    .qr-frame {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 18px;
+      border: 2px dashed rgba(107,83,68,0.35);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(240,230,207,0.45);
+      color: var(--ink-light);
+      text-align: center;
+      padding: 12px;
+    }
+
+    .qr-frame svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.55;
+    }
+
+    .unpublished-note {
+      padding: 12px 14px;
+      background: var(--cream);
+      border: 1.5px solid rgba(107,83,68,0.25);
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--ink-light);
+      margin-bottom: 18px;
+    }
+
+    /* Error page */
+    .error-panel {
+      justify-content: center;
+    }
+
+    .error-content {
+      text-align: center;
+      padding: 24px 8px;
+    }
+
+    .error-ornament {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 18px;
+      color: var(--ink-light);
+      opacity: 0.8;
+    }
+
+    .error-title {
+      font-family: var(--font-ui-serif);
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0 0 10px;
+    }
+
+    .error-body {
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--ink-light);
+      margin: 0 auto 20px;
+      max-width: 260px;
+    }
+
+    /* Footer */
+    .page-footer {
+      text-align: center;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(107,83,68,0.2);
+    }
+
+    .page-footer p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--ink-light);
+    }
+
+    .page-footer p + p {
+      margin-top: 4px;
+    }
+
+    /* noscript fallback */
+    .noscript-fallback {
+      display: none;
+    }
+    noscript .noscript-fallback {
+      display: block;
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 18px;
+      color: var(--ink-light);
+      text-align: center;
+    }
+
+    /* Desktop frame */
+    .desktop {
+      width: 760px;
+      height: 720px;
+      background: var(--leafy-deep);
+      border-radius: 24px;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.55),
+        0 0 0 12px #0f160d;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .desktop-screen {
+      position: absolute;
+      inset: 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--leafy);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+
+    .desktop .page-panel {
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .desktop .share-head,
+    .desktop .share-meta,
+    .desktop .share-from {
+      text-align: center;
+    }
+
+    .desktop .share-seal-wrap {
+      justify-content: center;
+    }
+
+    .desktop .section-header {
+      justify-content: center;
+    }
+
+    .desktop .web-section-title {
+      text-align: center;
+    }
+
+    .desktop .steps {
+      column-count: 2;
+      column-gap: 32px;
+      display: block;
+    }
+
+    .desktop .step {
+      break-inside: avoid;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .frames { gap: 32px; }
+      .phone { transform: scale(0.92); transform-origin: top center; }
+      .desktop { transform: scale(0.62); transform-origin: top center; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">My Recipes — Web</h1>
+  <p class="page-subtitle">Páginas servidas pelo Worker · CSP-compliant · sem fontes externas · telas em 390 × 844</p>
+
+  <!-- Shared inline SVG assets -->
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <defs>
+      <symbol id="sigil-star" viewBox="0 0 48 48">
+        <path d="M24,6 L28,18 L40,18 L30,26 L34,40 L24,32 L14,40 L18,26 L8,18 L20,18 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="sigil-owl" viewBox="0 0 48 48">
+        <path d="M12,38 L12,22 C12,14 18,8 24,8 C30,8 36,14 36,22 L36,38 C36,40 34,42 32,42 L16,42 C14,42 12,40 12,38 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="19" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="29" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="19" cy="22" r="1.5" fill="currentColor"/>
+        <circle cx="29" cy="22" r="1.5" fill="currentColor"/>
+        <path d="M24,26 L21,30 L27,30 Z" fill="currentColor"/>
+        <path d="M24,14 L24,10 M18,12 L20,16 M30,12 L28,16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="rim" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="38" fill="none" stroke="var(--navy-dark)" stroke-width="2"/>
+      </symbol>
+      <symbol id="flourish" viewBox="0 0 40 14">
+        <path d="M38,7 Q28,2 20,7 Q12,12 2,7" fill="none" stroke="#6B5344" stroke-width="1"/>
+        <circle cx="4" cy="7" r="2" fill="#D4A94A"/>
+        <ellipse cx="14" cy="9" rx="4" ry="3" fill="#8A9A5B" transform="rotate(-15 14 9)"/>
+      </symbol>
+      <symbol id="ivy" viewBox="0 0 80 80">
+        <path d="M2,78 Q8,55 22,42 Q12,44 4,52 M22,42 Q30,22 48,12 Q36,16 28,26 M48,12 Q55,6 66,2" fill="none" stroke="#3A2A1A" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="55" cy="18" rx="5" ry="8" fill="#8A9A5B" transform="rotate(-25 55 18)"/>
+        <ellipse cx="24" cy="46" rx="6" ry="9" fill="#8A9A5B" transform="rotate(-15 24 46)"/>
+        <circle cx="68" cy="8" r="2.5" fill="#D4A94A"/>
+        <circle cx="72" cy="12" r="2" fill="#6E2F3F"/>
+        <circle cx="14" cy="54" r="2" fill="#D4A94A"/>
+      </symbol>
+      <symbol id="qr-placeholder" viewBox="0 0 48 48">
+        <rect x="6" y="6" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="10" y="10" width="6" height="6" fill="currentColor"/>
+        <rect x="28" y="6" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="32" y="10" width="6" height="6" fill="currentColor"/>
+        <rect x="6" y="28" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <rect x="10" y="32" width="6" height="6" fill="currentColor"/>
+        <rect x="28" y="28" width="6" height="6" fill="currentColor"/>
+        <rect x="36" y="28" width="6" height="14" fill="currentColor"/>
+        <rect x="28" y="38" width="6" height="4" fill="currentColor"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="frames">
+    <!-- 1. Share page — no app / desktop browser -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="page-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll">
+                <div class="section-header">
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true"><use href="#flourish"/></svg>
+                  <div class="web-section-title">Receita</div>
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)"><use href="#flourish"/></svg>
+                </div>
+
+                <div class="share-seal-wrap">
+                  <div class="seal seal-lg" aria-hidden="true">
+                    <div class="seal-disc">
+                      <svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-star"/></svg>
+                    </div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                </div>
+                <div class="share-from">Carta de Lucas</div>
+
+                <div class="share-head">
+                  <h1 class="web-recipe-title">Bolo de cenoura especial da vovó com cobertura de chocolate meio amargo e nozes</h1>
+                </div>
+                <div class="share-meta web-meta">12 passos · por Lucas</div>
+
+                <hr class="rule">
+
+                <div class="steps">
+                  <div class="step"><span class="step-number">1.</span><span class="step-text">Pré-aqueça o forno a <strong>180 °C</strong> e unte uma forma médica com manteiga e farinha.</span></div>
+                  <div class="step"><span class="step-number">2.</span><span class="step-text">Rale <strong>3 cenouras médias</strong> e bata no liquidificador com os ovos e o óleo até ficar liso.</span></div>
+                  <div class="step"><span class="step-number">3.</span><span class="step-text">Misture o açúcar, a farinha e o fermento, depois incorpore o líquido batido.</span></div>
+                  <div class="step"><span class="step-number">4.</span><span class="step-text">Despeje na forma e leve ao forno por cerca de <strong>40 minutos</strong>, até o palito sair limpo.</span></div>
+                  <div class="step"><span class="step-number">5.</span><span class="step-text">Para a cobertura, derreta o chocolate com o creme de leite e espalhe sobre o bolo frio.</span></div>
+                  <div class="step"><span class="step-number">6.</span><span class="step-text">Finalize com as nozes picadas e deixe a cobertura firmar antes de cortar.</span></div>
+                </div>
+
+                <noscript>
+                  <p class="noscript-fallback">Como o JavaScript está desligado, selecione o texto acima e copie manualmente.</p>
+                </noscript>
+
+                <footer class="page-footer">
+                  <p>Enviada por Lucas em 4 de novembro de 2026.</p>
+                  <p>My Recipes guarda suas receitas como cartas num caderno de cozinha.</p>
+                </footer>
+              </div>
+              <div class="action-bar">
+                <button class="btn btn-primary" type="button">Copiar receita</button>
+                <a class="btn btn-secondary" href="/my-recipes.apk" role="button">Baixar o app (APK)</a>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Título longo em 3 linhas · selo em SVG inline · ações principais visíveis</div>
+      <div class="frame-caption">1. Share — sem app</div>
+    </div>
+
+    <!-- 2. Share page — Android, app installed -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="page-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll">
+                <div class="section-header">
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true"><use href="#flourish"/></svg>
+                  <div class="web-section-title">Receita</div>
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)"><use href="#flourish"/></svg>
+                </div>
+
+                <div class="share-seal-wrap">
+                  <div class="seal seal-lg" aria-hidden="true">
+                    <div class="seal-disc">
+                      <svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-star"/></svg>
+                    </div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                </div>
+                <div class="share-from">Carta de Lucas</div>
+
+                <div class="share-head">
+                  <h1 class="web-recipe-title">Bolo de cenoura especial da vovó com cobertura de chocolate meio amargo e nozes</h1>
+                </div>
+                <div class="share-meta web-meta">12 passos · por Lucas</div>
+
+                <hr class="rule">
+
+                <div class="steps">
+                  <div class="step"><span class="step-number">1.</span><span class="step-text">Pré-aqueça o forno a <strong>180 °C</strong> e unte uma forma médica com manteiga e farinha.</span></div>
+                  <div class="step"><span class="step-number">2.</span><span class="step-text">Rale <strong>3 cenouras médias</strong> e bata no liquidificador com os ovos e o óleo até ficar liso.</span></div>
+                  <div class="step"><span class="step-number">3.</span><span class="step-text">Misture o açúcar, a farinha e o fermento, depois incorpore o líquido batido.</span></div>
+                  <div class="step"><span class="step-number">4.</span><span class="step-text">Despeje na forma e leve ao forno por cerca de <strong>40 minutos</strong>, até o palito sair limpo.</span></div>
+                  <div class="step"><span class="step-number">5.</span><span class="step-text">Para a cobertura, derreta o chocolate com o creme de leite e espalhe sobre o bolo frio.</span></div>
+                  <div class="step"><span class="step-number">6.</span><span class="step-text">Finalize com as nozes picadas e deixe a cobertura firmar antes de cortar.</span></div>
+                </div>
+
+                <noscript>
+                  <p class="noscript-fallback">Como o JavaScript está desligado, selecione o texto acima e copie manualmente.</p>
+                </noscript>
+
+                <footer class="page-footer">
+                  <p>Enviada por Lucas em 4 de novembro de 2026.</p>
+                  <p>My Recipes guarda suas receitas como cartas num caderno de cozinha.</p>
+                </footer>
+              </div>
+              <div class="action-bar">
+                <a class="btn btn-primary" href="intent://r.lunna.boo/r/abc#Intent;scheme=https;package=com.lunna.recipes;end" role="button">Abrir no app</a>
+                <button class="btn btn-secondary" type="button">Copiar receita</button>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">"Abrir no app" como ação principal · "Copiar" passa a secundário</div>
+      <div class="frame-caption">2. Share — app instalado</div>
+    </div>
+
+    <!-- 3. Install page -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="page-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll">
+                <div class="section-header">
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true"><use href="#flourish"/></svg>
+                  <div class="web-section-title">My Recipes</div>
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)"><use href="#flourish"/></svg>
+                </div>
+
+                <div class="install-hero">
+                  <div class="seal" aria-hidden="true">
+                    <div class="seal-disc">
+                      <svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-owl"/></svg>
+                    </div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                  <p>Um caderno de receitas para duas pessoas na cozinha. Cole, organize e compartilhe receitas como cartas seladas.</p>
+                </div>
+
+                <!-- Variant shown when APK isn't published yet -->
+                <div class="unpublished-note" hidden>
+                  O arquivo de instalação ainda não foi publicado. Volte em breve ou peça para quem enviou o link compartilhar a receita de outro jeito.
+                </div>
+
+                <div class="qr-frame" aria-label="Espaço reservado para o QR code">
+                  <svg viewBox="0 0 48 48" aria-hidden="true"><use href="#qr-placeholder"/></svg>
+                  <span class="web-caption">QR code em breve</span>
+                </div>
+
+                <hr class="rule-dotted">
+
+                <div class="web-caption" style="margin-bottom:10px;">Como instalar</div>
+                <div class="install-steps">
+                  <div class="install-step"><span class="install-step-text">Toque em <em>Baixar o app</em> acima e aguarde o APK.</span></div>
+                  <div class="install-step"><span class="install-step-text">Abra o arquivo baixado e toque em <em>Instalar</em>.</span></div>
+                  <div class="install-step"><span class="install-step-text">Se o Android pedir, permita instalação de <em>fontes desconhecidas</em> para este navegador.</span></div>
+                  <div class="install-step"><span class="install-step-text">Se o Play Protect mostrar um aviso, toque em <em>Mais detalhes</em> e depois em <em>Instalar mesmo assim</em>.</span></div>
+                </div>
+
+                <footer class="page-footer">
+                  <p>Versão 1.0 · Instalador seguro, assinado pela Lunna.</p>
+                </footer>
+              </div>
+              <div class="action-bar single">
+                <a class="btn btn-primary" href="/my-recipes.apk" role="button">Baixar o app (APK)</a>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Botão de APK primário fixo na base · passos numerados sem sobreposição · frame vazio para QR</div>
+      <div class="frame-caption">3. Página de instalação</div>
+    </div>
+
+    <!-- 4. Error page — 404 missing -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="page-panel error-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll centered">
+                <div class="error-content">
+                  <svg class="error-ornament" viewBox="0 0 80 80" aria-hidden="true">
+                    <path d="M40,8 C58,8 72,22 72,40 C72,58 58,72 40,72 C22,72 8,58 8,40 C8,22 22,8 40,8 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M28,32 L52,56 M52,32 L28,56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="40" cy="24" r="3" fill="currentColor"/>
+                  </svg>
+                  <h1 class="error-title">Esta receita não está mais disponível.</h1>
+                  <p class="error-body">O link pode estar errado ou a receita foi removida.</p>
+                </div>
+              </div>
+              <div class="action-bar">
+                <a class="btn btn-secondary" href="/" role="button">Voltar para o início</a>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Tom calmo · selo triste em SVG · link de saída claro</div>
+      <div class="frame-caption">4. Erro 404</div>
+    </div>
+
+    <!-- 5. Error page — 410 revoked -->
+    <div class="frame-wrap">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="grain"></div>
+          <div class="vignette"></div>
+          <div class="status-bar"><span>9:41</span><span>▣ 72%</span></div>
+
+          <div class="page-panel error-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll centered">
+                <div class="error-content">
+                  <svg class="error-ornament" viewBox="0 0 80 80" aria-hidden="true">
+                    <path d="M40,8 C58,8 72,22 72,40 C72,58 58,72 40,72 C22,72 8,58 8,40 C8,22 22,8 40,8 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M28,32 L52,56 M52,32 L28,56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="40" cy="24" r="3" fill="currentColor"/>
+                  </svg>
+                  <h1 class="error-title">Esta receita não está mais disponível.</h1>
+                  <p class="error-body">O remetente desativou este link.</p>
+                </div>
+              </div>
+              <div class="action-bar">
+                <a class="btn btn-secondary" href="/" role="button">Voltar para o início</a>
+              </div>
+            </div>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+      <div class="frame-note">Mensagem muda apenas uma linha: link desativado pelo remetente</div>
+      <div class="frame-caption">5. Erro 410</div>
+    </div>
+
+    <!-- 6. Desktop frame — share page no-app -->
+    <div class="frame-wrap">
+      <div class="desktop">
+        <div class="desktop-screen">
+          <div class="grain"></div>
+          <div class="vignette"></div>
+
+          <div class="page-panel">
+            <svg class="ivy-corner tl" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+            <svg class="ivy-corner br" viewBox="0 0 80 80" aria-hidden="true"><use href="#ivy"/></svg>
+
+            <div class="page-content">
+              <div class="page-scroll">
+                <div class="section-header">
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true"><use href="#flourish"/></svg>
+                  <div class="web-section-title">Receita</div>
+                  <svg class="flourish" viewBox="0 0 40 14" aria-hidden="true" style="transform:scaleX(-1)"><use href="#flourish"/></svg>
+                </div>
+
+                <div class="share-seal-wrap">
+                  <div class="seal seal-lg" aria-hidden="true">
+                    <div class="seal-disc">
+                      <svg class="seal-sigil" viewBox="0 0 48 48"><use href="#sigil-star"/></svg>
+                    </div>
+                    <svg class="seal-rim" viewBox="0 0 80 80" aria-hidden="true"><use href="#rim"/></svg>
+                  </div>
+                </div>
+                <div class="share-from">Carta de Lucas</div>
+
+                <div class="share-head">
+                  <h1 class="web-recipe-title">Bolo de cenoura especial da vovó com cobertura de chocolate meio amargo e nozes</h1>
+                </div>
+                <div class="share-meta web-meta">12 passos · por Lucas</div>
+
+                <hr class="rule">
+
+                <div class="steps">
+                  <div class="step"><span class="step-number">1.</span><span class="step-text">Pré-aqueça o forno a <strong>180 °C</strong> e unte uma forma médica com manteiga e farinha.</span></div>
+                  <div class="step"><span class="step-number">2.</span><span class="step-text">Rale <strong>3 cenouras médias</strong> e bata no liquidificador com os ovos e o óleo até ficar liso.</span></div>
+                  <div class="step"><span class="step-number">3.</span><span class="step-text">Misture o açúcar, a farinha e o fermento, depois incorpore o líquido batido.</span></div>
+                  <div class="step"><span class="step-number">4.</span><span class="step-text">Despeje na forma e leve ao forno por cerca de <strong>40 minutos</strong>, até o palito sair limpo.</span></div>
+                  <div class="step"><span class="step-number">5.</span><span class="step-text">Para a cobertura, derreta o chocolate com o creme de leite e espalhe sobre o bolo frio.</span></div>
+                  <div class="step"><span class="step-number">6.</span><span class="step-text">Finalize com as nozes picadas e deixe a cobertura firmar antes de cortar.</span></div>
+                  <div class="step"><span class="step-number">7.</span><span class="step-text">Sirva em fatias médias e guarde o restante em pote fechado por até 3 dias.</span></div>
+                  <div class="step"><span class="step-number">8.</span><span class="step-text">Para congelar, embale em pedaços individuais e consuma em até 30 dias.</span></div>
+                </div>
+
+                <noscript>
+                  <p class="noscript-fallback">Como o JavaScript está desligado, selecione o texto acima e copie manualmente.</p>
+                </noscript>
+
+                <footer class="page-footer">
+                  <p>Enviada por Lucas em 4 de novembro de 2026.</p>
+                  <p>My Recipes guarda suas receitas como cartas num caderno de cozinha.</p>
+                </footer>
+              </div>
+              <div class="action-bar">
+                <button class="btn btn-primary" type="button">Copiar receita</button>
+                <a class="btn btn-secondary" href="/my-recipes.apk" role="button">Baixar o app (APK)</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-note">Painel centralizado · passos em duas colunas · barra de ação visível sem rolagem</div>
+      <div class="frame-caption">6. Desktop — share sem app</div>
+    </div>
+  </div>
+
+  <div style="max-width:720px; margin:48px auto 0; color:var(--cream); font-size:14px; line-height:22px; opacity:0.85;">
+    <p><strong>Restrições CSP respeitadas neste arquivo:</strong> nenhuma fonte externa (apenas Georgia e ui-serif), todos os ornamentos são SVG inline, nenhum script inline, botão de copia projetado para ser ligado por <code>/assets/page.js</code>, e fallback <code>&lt;noscript&gt;</code> para cópia manual.</p>
+  </div>
+</body>
+</html>
