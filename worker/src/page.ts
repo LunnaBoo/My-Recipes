@@ -777,7 +777,7 @@ ${apkNote}
 <li class="install-step"><span class="install-step-text">Se o Play Protect mostrar um aviso, toque em <em>Mais detalhes</em> e depois em <em>Instalar mesmo assim</em>.</span></li>
 </ol>
 <footer class="page-footer">
-<p>Versão 1.0 · Android 8 ou superior.</p>
+<p>Android 8 ou superior.</p>
 </footer>
 </div>
 ${actionBar}

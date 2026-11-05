@@ -183,6 +183,7 @@ if command -v setsid >/dev/null 2>&1; then
     --persist-to "$STATE" \
     --var ASSETLINKS_JSON:[] \
     --var APK_URL: \
+    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"","notes":""} \
     >"$LOG" 2>&1 &
 else
   CI=1 WRANGLER_SEND_METRICS=false npx --no-install wrangler dev \
@@ -191,6 +192,7 @@ else
     --persist-to "$STATE" \
     --var ASSETLINKS_JSON:[] \
     --var APK_URL: \
+    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"","notes":""} \
     >"$LOG" 2>&1 &
 fi
 SERVER_PID=$!
