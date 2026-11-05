@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Line } from 'react-native-svg';
 
 import { ActionSheet, type ActionSheetItem } from '../../components/ActionSheet';
 import { FilterRow } from '../../components/FilterRow';
@@ -266,7 +267,26 @@ export default function RecipeListScreen() {
         onPress={() => setSheetOpen(true)}
         style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
       >
-        <Text style={styles.fabLabel}>+</Text>
+        <Svg height={22} viewBox="0 0 22 22" width={22}>
+          <Line
+            stroke={theme.colors.cream}
+            strokeLinecap="round"
+            strokeWidth={2.4}
+            x1={11}
+            x2={11}
+            y1={3.5}
+            y2={18.5}
+          />
+          <Line
+            stroke={theme.colors.cream}
+            strokeLinecap="round"
+            strokeWidth={2.4}
+            x1={3.5}
+            x2={18.5}
+            y1={11}
+            y2={11}
+          />
+        </Svg>
       </Pressable>
 
       <Modal
@@ -397,12 +417,6 @@ const styles = StyleSheet.create({
   },
   fabPressed: {
     opacity: 0.85,
-  },
-  fabLabel: {
-    ...theme.typography.recipeTitle,
-    color: theme.colors.cream,
-    fontSize: 30,
-    lineHeight: 34,
   },
   pressed: {
     opacity: 0.7,
