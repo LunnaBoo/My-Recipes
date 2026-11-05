@@ -103,4 +103,4 @@ These have never run on a device and need a phone pass:
 |---|---|---|---|
 | 1.0.0 | 1 | 2026-11-04 | First APK: local recipes, sharing, import letter. |
 | 1.1.0 | 2 | 2026-11-05 | Parchment menus/dialogs, dedupe fix, re-publish, updater. |
-| 1.2.0 | 3 | pending | Seals, backup/import, trash, editor toolbar + preview, UI fixes. |
+| 1.2.0 | 3 | 2026-11-05 | Seals, backup/import, trash, editor toolbar + preview, UI fixes. |

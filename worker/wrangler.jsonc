@@ -18,7 +18,7 @@
     // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
     "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
     "APK_URL": "https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk",
-    "VERSION_JSON": "{\"versionCode\":2,\"versionName\":\"1.1.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":104736602,\"sha256\":\"cde78e653415a5420f220713831f61c86cd975011eff9a49c06dce3b80c9416c\",\"notes\":\"Menus de pergaminho, corre\\u00e7\\u00e3o de duplicatas e atualiza\\u00e7\\u00e3o pelo app.\"}",
+    "VERSION_JSON": "{\"versionCode\":3,\"versionName\":\"1.2.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":104983165,\"sha256\":\"acd5daebbbba26d9adf5d6cf72d65fdab7c560c0ad592300d3d0b5e416176cb8\",\"notes\":\"Selos, backup, lixeira e barra de edicao.\"}",
     "SITE_NAME": "My Recipes"
   }
 }
