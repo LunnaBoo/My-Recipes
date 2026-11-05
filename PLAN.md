@@ -29,14 +29,14 @@ Last updated: 2026-11-05
 
 ## Next releases
 
-### v2 — current build (versionCode 2)
-Already coded, waiting on the build + release:
-- [ ] Bump `versionCode` to 2, `version` to 1.1.0.
-- [ ] EAS preview build; verify signer fingerprint before publishing.
-- [ ] GitHub Release with asset `myrecipes.apk`.
-- [ ] Point `APK_URL` at `releases/latest/download/myrecipes.apk`; set `VERSION_JSON`
+### v2 — shipped (versionCode 2)
+Released 2026-11-05 as `v1.1.0`.
+- [x] Bump `versionCode` to 2, `version` to 1.1.0.
+- [x] EAS preview build; verify signer fingerprint before publishing.
+- [x] GitHub Release with asset `myrecipes.apk`.
+- [x] Point `APK_URL` at `releases/latest/download/myrecipes.apk`; set `VERSION_JSON`
       (versionCode 2, size, notes); deploy; verify `/app/latest.apk` and `/app/version.json`.
-- [ ] Manual install on both phones (last manual install — updater takes over after this).
+- [x] Manual install on both phones (last manual install — updater takes over after this).
 
 ### v3 — features (versionCode 3)
 - [ ] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
@@ -78,4 +78,4 @@ These have never run on a device and need a phone pass:
 | Version | versionCode | Date | Notes |
 |---|---|---|---|
 | 1.0.0 | 1 | 2026-11-04 | First APK: local recipes, sharing, import letter. |
-| 1.1.0 | 2 | pending | Parchment menus/dialogs, dedupe fix, re-publish, updater. |
+| 1.1.0 | 2 | 2026-11-05 | Parchment menus/dialogs, dedupe fix, re-publish, updater. |

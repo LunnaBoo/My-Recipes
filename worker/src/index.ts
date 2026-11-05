@@ -451,7 +451,8 @@ function handleVersion(env: Env): Response {
     }
   }
 
-  return jsonResponse(value, 200, { "Cache-Control": "public, max-age=300" });
+  // Short cache so a release propagates fast; the payload is tiny.
+  return jsonResponse(value, 200, { "Cache-Control": "public, max-age=60" });
 }
 
 function handleApk(env: Env): Response {

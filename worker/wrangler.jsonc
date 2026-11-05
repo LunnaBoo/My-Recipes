@@ -17,8 +17,8 @@
     //   printf '%s' "$(openssl rand -hex 32)" | npx wrangler secret put APP_KEY
     // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
     "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
-    "APK_URL": "https://expo.dev/artifacts/eas/7kp_T-U7UQRKRP052kc8xkk48lkBhCEKelJXxGLDTRc.apk",
-    "VERSION_JSON": "{\"versionCode\":1,\"versionName\":\"1.0.0\",\"url\":\"https://expo.dev/artifacts/eas/7kp_T-U7UQRKRP052kc8xkk48lkBhCEKelJXxGLDTRc.apk\",\"notes\":\"Primeira versao: lista, editor, importacao por link.\"}",
+    "APK_URL": "https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk",
+    "VERSION_JSON": "{\"versionCode\":2,\"versionName\":\"1.1.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":104736602,\"sha256\":\"cde78e653415a5420f220713831f61c86cd975011eff9a49c06dce3b80c9416c\",\"notes\":\"Menus de pergaminho, corre\\u00e7\\u00e3o de duplicatas e atualiza\\u00e7\\u00e3o pelo app.\"}",
     "SITE_NAME": "My Recipes"
   }
 }
