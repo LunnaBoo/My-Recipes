@@ -26,22 +26,21 @@ type ActionSheetProps = {
   title?: string;
   items: readonly ActionSheetItem[];
   onDismiss: () => void;
-  cancelLabel: string;
 };
 
 /**
  * Parchment bottom sheet for context actions.
  *
  * Pure presentation: the caller owns the items and every action. The sheet only
- * renders rows, the scrim, and the always-present cancel row. Items scroll when
- * the type scale or the number of rows makes the panel taller than the screen.
+ * renders rows and the scrim. It is dismissed by tapping outside or with the
+ * system back gesture — there is no cancel row. Items scroll when the type scale
+ * or the number of rows makes the panel taller than the screen.
  */
 export function ActionSheet({
   visible,
   title,
   items,
   onDismiss,
-  cancelLabel,
 }: ActionSheetProps) {
   const insets = useSafeAreaInsets();
   const panelRef = useRef<ComponentRef<typeof View>>(null);
@@ -80,8 +79,6 @@ export function ActionSheet({
           onAccessibilityEscape={onDismiss}
           style={[styles.panel, { paddingBottom: Math.max(insets.bottom, theme.spacing.lg) }]}
         >
-          <View pointerEvents="none" style={styles.grabber} />
-
           {title ? (
             <>
               <Text accessibilityRole="header" style={styles.title}>
@@ -125,17 +122,6 @@ export function ActionSheet({
               </View>
             ))}
           </ScrollView>
-
-          <View pointerEvents="none" style={styles.cancelRule} />
-
-          <Pressable
-            accessibilityLabel={cancelLabel}
-            accessibilityRole="button"
-            onPress={onDismiss}
-            style={({ pressed }) => [styles.row, styles.cancelRow, pressed && styles.rowPressed]}
-          >
-            <Text style={styles.rowLabel}>{cancelLabel}</Text>
-          </Pressable>
         </View>
       </View>
     </Modal>
@@ -169,15 +155,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: -4 },
-  },
-  grabber: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.ink,
-    opacity: 0.3,
-    marginBottom: theme.spacing.md,
   },
   title: {
     ...theme.typography.recipeTitle,
@@ -225,15 +202,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.inkLight,
     opacity: 0.25,
     marginHorizontal: theme.spacing.lg,
-  },
-  cancelRule: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.tan,
-    marginTop: theme.spacing.md,
-    marginHorizontal: theme.spacing.lg,
-  },
-  cancelRow: {
-    marginTop: theme.spacing.xs,
-    marginHorizontal: theme.spacing.sm,
   },
 });

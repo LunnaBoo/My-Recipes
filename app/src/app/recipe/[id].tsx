@@ -294,7 +294,6 @@ export default function RecipeViewScreen() {
       ) : null}
 
       <ActionSheet
-        cancelLabel={ptBR.cancel}
         items={menuItems}
         onDismiss={() => setMenuOpen(false)}
         title={recipe.title}
