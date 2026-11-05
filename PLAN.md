@@ -45,10 +45,10 @@ Released 2026-11-05 as `v1.1.0`.
 - [ ] Visual pass on a device: the 42px inset changes every ScreenFrame screen.
 
 ### v3 — features (versionCode 3)
-- [ ] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
+- [x] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
       id and reports conflicts. Needed before a third person installs.
-- [ ] **Trash screen** — list with "expira em N dias", restore, delete forever, empty state.
-- [ ] **Seals** — `Seu selo` picker with six sigils + photo; store in `profile`; send
+- [x] **Trash screen** — list with "expira em N dias", restore, delete forever, empty state.
+- [ ] **Seals** — Worker side shipped (validation, storage, web rendering); `Seu selo` picker with six sigils + photo; store in `profile`; send
       `senderSeal` in the share payload; Worker validation + storage; render on the web page
       and in the import letter; fall back to the default star.
 - [ ] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle.
@@ -73,6 +73,11 @@ Decided 2026-11-05: two extra themes, built only after the v3/v4 work.
 
 Decision: **the launcher icon never changes.** One icon, one identity. Theme affects the
 in-app look only — no `activity-alias` icon switching, no app restart on theme change.
+
+### v3 progress notes
+- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as sigil or circular photo. 138 smoke assertions.
+- App backup/import + trash shipped in `d4acf80` (55 tests).
+- Remaining for v3: seal picker/payload on the app side, editor toolbar + preview, then the build.
 
 ## Verification debt
 
