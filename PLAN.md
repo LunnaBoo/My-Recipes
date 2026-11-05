@@ -38,6 +38,12 @@ Released 2026-11-05 as `v1.1.0`.
       (versionCode 2, size, notes); deploy; verify `/app/latest.apk` and `/app/version.json`.
 - [x] Manual install on both phones (last manual install — updater takes over after this).
 
+### v3 — unreleased UI fixes already committed
+- [x] FAB plus drawn as SVG (was off-centre glyph).
+- [x] Action sheet: drag handle and cancel row removed.
+- [x] Corner ivy no longer cut by the search field (ivy scaled, 42px top inset).
+- [ ] Visual pass on a device: the 42px inset changes every ScreenFrame screen.
+
 ### v3 — features (versionCode 3)
 - [ ] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
       id and reports conflicts. Needed before a third person installs.
@@ -48,12 +54,25 @@ Released 2026-11-05 as `v1.1.0`.
 - [ ] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle.
 
 ### v4 — polish (versionCode 4)
-- [ ] Custom launcher icon + splash (currently Expo template art).
+- [ ] Single custom launcher icon + splash (currently Expo template art).
 - [ ] Drop x86 ABIs to roughly halve the 100 MB APK.
 - [ ] Cloudflare edge rate-limit rule on `POST /api/recipes` (spec: 20 writes/hour/IP).
 - [ ] `og:image` static card for link previews.
 - [ ] Serve the APK from the Worker/R2 instead of redirecting to GitHub, if Releases ever
       becomes a constraint.
+
+### Themes — after v4, deliberately last
+Decided 2026-11-05: two extra themes, built only after the v3/v4 work.
+
+- [ ] Refactor `theme` from module-level imports to a `ThemeProvider` + `useTheme()`.
+      Ornaments currently read `theme.colors.*` at module scope and must take colours
+      from the provider instead.
+- [ ] **Candlelit** — dimmed parchment, dark brown desk, brighter gold (DESIGN.md §8).
+- [ ] **Second theme — concept TBD** (the user has a direction in mind; define it before building).
+- [ ] Picker in Ajustes, persisted in `profile`, applied without a restart.
+
+Decision: **the launcher icon never changes.** One icon, one identity. Theme affects the
+in-app look only — no `activity-alias` icon switching, no app restart on theme change.
 
 ## Verification debt
 
@@ -62,7 +81,7 @@ These have never run on a device and need a phone pass:
 - [ ] App Links: does `https://r.lunna.boo/r/<id>` open the app? If not, does the page's
       "Abrir no app" work?
 - [ ] Updater: download progress, installer handoff, "install unknown apps" recovery.
-- [ ] Parchment layout at 360dp and at 200% font scale.
+- [ ] Parchment layout at 360dp and at 200% font scale, including the new 42px panel inset.
 - [ ] ActionSheet/ConfirmDialog stacking and dismissal.
 - [ ] Share sheet message format in WhatsApp.
 

@@ -55,6 +55,10 @@ gestures) can only be verified on a phone.
   `script-src 'self'` (only `/assets/page.js`), no external fonts or images, every interpolation
   escaped, markdown pre-escaped so recipes can never inject HTML.
 - **UI is pt-BR**, tokens only from `src/theme`, no new hex literals outside `app.json`.
+- **One launcher icon, forever.** Do not add `activity-alias` icon switching. Themes change the
+  in-app look only; the launcher icon is the app's fixed identity.
+- **`theme` is a module-level constant today.** Do not add a second palette until it is refactored
+  to a `ThemeProvider` + `useTheme()` — the SVGs read colours at module scope.
 
 ## Security model
 
