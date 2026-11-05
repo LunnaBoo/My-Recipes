@@ -87,19 +87,26 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: theme.spacing.xs,
+    // Clears the corner ivy so no opaque control (the search field) cuts it.
+    paddingTop: 42,
     zIndex: 2,
   },
   ivyTopLeft: {
-    top: 10,
-    left: 10,
+    top: 4,
+    left: 4,
+    width: 36,
+    height: 36,
   },
   ivyTopRight: {
-    top: 10,
-    right: 10,
+    top: 4,
+    right: 4,
+    width: 36,
+    height: 36,
   },
   ivyBottomRight: {
-    bottom: 10,
-    right: 10,
+    bottom: 4,
+    right: 4,
+    width: 36,
+    height: 36,
   },
 });
