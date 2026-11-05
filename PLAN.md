@@ -48,10 +48,10 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
       id and reports conflicts. Needed before a third person installs.
 - [x] **Trash screen** — list with "expira em N dias", restore, delete forever, empty state.
-- [ ] **Seals** — Worker side shipped (validation, storage, web rendering); `Seu selo` picker with six sigils + photo; store in `profile`; send
+- [x] **Seals** — Worker validation/rendering deployed; picker, payload, and rendering in the app shipped in `28c7351`. with six sigils + photo; store in `profile`; send
       `senderSeal` in the share payload; Worker validation + storage; render on the web page
       and in the import letter; fall back to the default star.
-- [ ] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle.
+- [ ] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — in progress.
 
 ### v4 — polish (versionCode 4)
 - [ ] Single custom launcher icon + splash (currently Expo template art).
@@ -77,7 +77,7 @@ in-app look only — no `activity-alias` icon switching, no app restart on theme
 ### v3 progress notes
 - Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as sigil or circular photo. 138 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
-- Remaining for v3: seal picker/payload on the app side, editor toolbar + preview, then the build.
+- Remaining for v3: editor toolbar + preview, then the build (versionCode 3, 1.2.0).
 
 ## Verification debt
 
