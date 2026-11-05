@@ -54,8 +54,56 @@ export const ptBR = {
   titleRequired: 'O título não pode ficar vazio.',
   recipeNotFound: 'Receita não encontrada.',
   trashTitle: 'Lixeira',
-  trashEmpty: 'A lixeira está vazia.',
-  trashPlaceholder: 'Receitas excluídas aparecem aqui por 30 dias.',
+  trashEmpty: 'A lixeira está vazia',
+  trashEmptyBody: 'Receitas excluídas aparecem aqui por 30 dias.',
+  trashRestoreHint: 'Toque para restaurar. Segure para apagar para sempre.',
+  trashRestored: 'Receita restaurada',
+  trashPurged: 'Receita apagada para sempre',
+  restore: 'Restaurar',
+  purgeForever: 'Apagar para sempre',
+  purgeConfirmTitle: 'Apagar para sempre?',
+  purgeConfirmBody: 'Esta receita será removida definitivamente. Não dá para desfazer.',
+  purgeConfirmAction: 'Apagar',
+  purgeFailed: 'Não foi possível apagar a receita.',
+  restoreFailed: 'Não foi possível restaurar a receita.',
+  trashExpiresIn: (days: number) =>
+    days <= 0 ? 'expira hoje' : days === 1 ? 'expira em 1 dia' : `expira em ${days} dias`,
+  trashItemAccessibility: (title: string, days: number) =>
+    days <= 0
+      ? `${title}, expira hoje`
+      : days === 1
+        ? `${title}, expira em 1 dia`
+        : `${title}, expira em ${days} dias`,
+  exportBackup: 'Exportar backup',
+  importBackup: 'Importar backup',
+  exportingBackup: 'Exportando…',
+  importingBackup: 'Importando…',
+  exportSummary: (count: number) =>
+    count === 1 ? '1 receita exportada' : `${count} receitas exportadas`,
+  exportEmpty: 'Não há receitas para exportar.',
+  importSummary: (inserted: number, existing: number) => {
+    const insertedPart =
+      inserted === 0 ? 'Nenhuma receita nova' : inserted === 1 ? '1 nova' : `${inserted} novas`;
+    if (existing === 0) return insertedPart;
+    const existingPart = existing === 1 ? '1 já existente' : `${existing} já existentes`;
+    return `${insertedPart}, ${existingPart}`;
+  },
+  importNoticeTitle: 'Backup importado',
+  importNoNewRecipes: (existing: number) =>
+    existing === 1
+      ? 'A única receita do backup já estava neste aparelho. Nada foi alterado.'
+      : `As ${existing} receitas do backup já estavam neste aparelho. Nada foi alterado.`,
+  importMissingFiles: (count: number) =>
+    count === 1
+      ? '1 receita do backup não tinha o arquivo e foi ignorada.'
+      : `${count} receitas do backup não tinham o arquivo e foram ignoradas.`,
+  backupShareDialog: 'Compartilhar backup',
+  backupExportFailed: 'Não foi possível exportar o backup.',
+  backupImportFailed: 'Não foi possível importar o backup.',
+  backupUnreadable: 'Não foi possível ler o arquivo escolhido.',
+  backupInvalidArchive: 'Este arquivo não é um backup válido.',
+  backupTooLarge: 'O arquivo é maior que 50 MB.',
+  backupShareUnavailable: 'Não foi possível abrir o compartilhamento.',
   settingsTitle: 'Ajustes',
   displayNameLabel: 'Nome de exibição',
   displayNamePlaceholder: 'Seu nome',

@@ -7,6 +7,7 @@ import { bodyFilePath, deleteBody, ensureRecipeDir, readBody, writeBody } from '
 import { getDb, getSearchMode, indexRecipeBody, toFtsQuery } from './client';
 import type {
   CreateRecipeInput,
+  ImportedRecipeInput,
   ListRecipesOptions,
   Profile,
   Recipe,
@@ -97,6 +98,67 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
   const created = await getRecipe(id);
   if (!created) throw new Error('Não foi possível criar a receita.');
   return created;
+}
+
+/**
+ * Inserts a recipe restored from a backup, preserving its id and timestamps.
+ *
+ * Import never overwrites: an id that already exists is left untouched and
+ * `false` is returned. The DB row goes in before the body file so a conflicting
+ * id can never clobber an existing local body; if the write fails afterwards the
+ * row is rolled back.
+ */
+export async function insertImportedRecipe(input: ImportedRecipeInput): Promise<boolean> {
+  const db = await getDb();
+  const filePath = bodyFilePath(input.id);
+  let inserted = false;
+
+  await db.withTransactionAsync(async () => {
+    const result = await db.runAsync(
+      `INSERT INTO recipes (
+        id, title, file_path, step_count, created_at, updated_at, deleted_at,
+        source_share_id, source_name, source_seal, imported_at, content_hash, pinned
+      ) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO NOTHING`,
+      [
+        input.id,
+        input.title,
+        filePath,
+        input.stepCount,
+        input.createdAt,
+        input.updatedAt,
+        input.sourceShareId,
+        input.sourceName,
+        input.sourceSeal,
+        input.importedAt,
+        input.contentHash,
+        input.pinned,
+      ],
+    );
+
+    if (result.changes === 0) return;
+
+    await indexRecipeBody(db, input.id, input.title, input.body);
+    inserted = true;
+  });
+
+  if (!inserted) return false;
+
+  try {
+    await writeBody(input.id, input.body);
+  } catch (error) {
+    await db.runAsync('DELETE FROM recipes WHERE id = ?', input.id).catch(() => {});
+    throw error;
+  }
+
+  return true;
+}
+
+/** Ids of every local recipe, trash included, for backup merge planning. */
+export async function listRecipeIds(): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ id: string }>('SELECT id FROM recipes');
+  return rows.map((row) => row.id);
 }
 
 export async function updateRecipe(id: string, patch: UpdateRecipeInput): Promise<Recipe> {
@@ -221,6 +283,45 @@ export async function restoreRecipe(id: string): Promise<boolean> {
     [Date.now(), id],
   );
   return result.changes > 0;
+}
+
+/** Everything currently in the trash, newest deletion first. Bodies are not read. */
+export async function listTrashed(): Promise<RecipeRow[]> {
+  const db = await getDb();
+  return db.getAllAsync<RecipeRow>(
+    `SELECT * FROM recipes
+     WHERE deleted_at IS NOT NULL
+     ORDER BY deleted_at DESC, title COLLATE NOCASE`,
+  );
+}
+
+/**
+ * Hard delete: removes the row (and its shares via cascade) plus the body file.
+ * Only recipes that are already in the trash can be purged, so a stale tap on a
+ * restored row cannot destroy a live recipe.
+ */
+export async function purgeRecipe(id: string): Promise<boolean> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ id: string }>(
+    'SELECT id FROM recipes WHERE id = ? AND deleted_at IS NOT NULL',
+    id,
+  );
+  if (!row) return false;
+
+  const result = await db.runAsync(
+    'DELETE FROM recipes WHERE id = ? AND deleted_at IS NOT NULL',
+    id,
+  );
+  if (result.changes === 0) return false;
+
+  // Row first, file second: a leftover file wastes space, but deleting the
+  // body of a recipe that was restored concurrently would lose data.
+  try {
+    await deleteBody(id);
+  } catch (error) {
+    console.warn('[trash] body file could not be removed:', error);
+  }
+  return true;
 }
 
 export async function togglePin(id: string): Promise<boolean> {

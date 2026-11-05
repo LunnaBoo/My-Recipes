@@ -42,6 +42,25 @@ export type UpdateRecipeInput = {
   pinned?: boolean;
 };
 
+/**
+ * A recipe restored from a backup. Unlike `CreateRecipeInput` it keeps the
+ * original id and timestamps, and it may be pinned or imported.
+ */
+export type ImportedRecipeInput = {
+  id: string;
+  title: string;
+  stepCount: number;
+  createdAt: number;
+  updatedAt: number;
+  pinned: number;
+  sourceShareId: string | null;
+  sourceName: string | null;
+  sourceSeal: string | null;
+  importedAt: number | null;
+  contentHash: string;
+  body: string;
+};
+
 export type ListRecipesOptions = {
   query?: string;
   pinnedOnly?: boolean;

@@ -1,77 +1,352 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ActionSheet, type ActionSheetItem } from '../../components/ActionSheet';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FolderTabs } from '../../components/FolderTabs';
 import { ScreenFrame } from '../../components/ScreenFrame';
 import { SectionHeader } from '../../components/SectionHeader';
-import { countTrashed } from '../../db/repository';
+import { Snackbar } from '../../components/Snackbar';
+import { IvyWreath } from '../../components/ornaments';
+import { countTrashed, listTrashed, purgeRecipe, restoreRecipe } from '../../db/repository';
+import type { RecipeRow } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
+import { daysUntilExpiry } from '../../lib/trash';
 import { theme } from '../../theme';
 
+type SnackbarState = { id: number; message: string };
+
+type TrashRowProps = {
+  item: RecipeRow;
+  busy: boolean;
+  onRestore: (item: RecipeRow) => void;
+  onMenu: (item: RecipeRow) => void;
+};
+
 /**
- * Minimal Lixeira root: it proves the tab route and shell while the real
- * restore/delete-forever actions stay in their own lane.
+ * Trash row: title plus the remaining days. Tapping restores (the common case);
+ * the overflow button and a long press open the destructive actions, so the
+ * irreversible delete is never a single accidental tap.
  */
+const TrashRow = memo(function TrashRow({ item, busy, onRestore, onMenu }: TrashRowProps) {
+  const days = daysUntilExpiry(item.deleted_at ?? 0);
+
+  return (
+    <View style={[styles.row, busy && styles.rowBusy]}>
+      <Pressable
+        accessibilityHint={ptBR.trashRestoreHint}
+        accessibilityLabel={ptBR.trashItemAccessibility(item.title, days)}
+        accessibilityRole="button"
+        accessibilityState={{ busy, disabled: busy }}
+        disabled={busy}
+        onLongPress={() => onMenu(item)}
+        onPress={() => onRestore(item)}
+        style={({ pressed }) => [styles.rowMain, pressed && styles.rowMainPressed]}
+      >
+        <Text numberOfLines={2} style={styles.rowTitle}>
+          {item.title}
+        </Text>
+        <Text style={styles.rowMeta}>{ptBR.trashExpiresIn(days)}</Text>
+      </Pressable>
+
+      <Pressable
+        accessibilityLabel={`${ptBR.moreOptions}: ${item.title}`}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: busy }}
+        disabled={busy}
+        onPress={() => onMenu(item)}
+        style={({ pressed }) => [styles.rowMenu, pressed && styles.rowMenuPressed]}
+      >
+        <Text
+          accessibilityElementsHidden
+          maxFontSizeMultiplier={1.3}
+          numberOfLines={1}
+          style={styles.rowMenuLabel}
+        >
+          ⋯
+        </Text>
+      </Pressable>
+
+      <View pointerEvents="none" style={styles.rule} />
+    </View>
+  );
+});
+
+function EmptyTrash() {
+  return (
+    <View style={styles.empty}>
+      <View style={styles.emptyCard}>
+        <IvyWreath />
+        <Text style={styles.emptyTitle}>{ptBR.trashEmpty}</Text>
+        <Text style={styles.emptyBody}>{ptBR.trashEmptyBody}</Text>
+      </View>
+    </View>
+  );
+}
+
+/** Lixeira: restore or permanently delete, with the 30-day window always visible. */
 export default function TrashScreen() {
+  const [items, setItems] = useState<RecipeRow[]>([]);
   const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [menuItem, setMenuItem] = useState<RecipeRow | null>(null);
+  const [confirmItem, setConfirmItem] = useState<RecipeRow | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
+
+  const refresh = useCallback(() => {
+    setRefreshTick((tick) => tick + 1);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
 
-      countTrashed()
-        .then((trashed) => {
-          if (!cancelled) setCount(trashed);
+      Promise.all([listTrashed(), countTrashed()])
+        .then(([rows, trashed]) => {
+          if (cancelled) return;
+          setItems(rows);
+          setCount(trashed);
         })
         .catch((error: unknown) => {
-          console.warn('[trash] count failed:', error);
-          if (!cancelled) setCount(0);
+          console.warn('[trash] load failed:', error);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
         });
 
       return () => {
         cancelled = true;
       };
-    }, []),
+    }, [refreshTick]),
+  );
+
+  const handleRestore = useCallback(
+    async (item: RecipeRow) => {
+      if (busyId) return;
+
+      setBusyId(item.id);
+      try {
+        const restored = await restoreRecipe(item.id);
+        if (!restored) {
+          refresh();
+          return;
+        }
+        refresh();
+        setSnackbar({ id: Date.now(), message: ptBR.trashRestored });
+      } catch (error) {
+        console.warn('[trash] restore failed:', error);
+        setSnackbar({ id: Date.now(), message: ptBR.restoreFailed });
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [busyId, refresh],
+  );
+
+  const handlePurge = useCallback(
+    async (item: RecipeRow) => {
+      setConfirmItem(null);
+      if (busyId) return;
+
+      setBusyId(item.id);
+      try {
+        const purged = await purgeRecipe(item.id);
+        if (!purged) {
+          refresh();
+          return;
+        }
+        refresh();
+        setSnackbar({ id: Date.now(), message: ptBR.trashPurged });
+      } catch (error) {
+        console.warn('[trash] purge failed:', error);
+        setSnackbar({ id: Date.now(), message: ptBR.purgeFailed });
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [busyId, refresh],
+  );
+
+  const openMenu = useCallback((item: RecipeRow) => {
+    setMenuItem(item);
+  }, []);
+
+  const menu = menuItem;
+  const menuItems: ActionSheetItem[] = menu
+    ? [
+        {
+          label: ptBR.restore,
+          onPress: () => {
+            setMenuItem(null);
+            void handleRestore(menu);
+          },
+        },
+        {
+          label: ptBR.purgeForever,
+          tone: 'destructive',
+          onPress: () => {
+            setMenuItem(null);
+            setConfirmItem(menu);
+          },
+        },
+      ]
+    : [];
+
+  const renderItem = useCallback(
+    ({ item }: { item: RecipeRow }) => (
+      <TrashRow busy={busyId === item.id} item={item} onMenu={openMenu} onRestore={handleRestore} />
+    ),
+    [busyId, handleRestore, openMenu],
   );
 
   return (
     <ScreenFrame corners="top" tabs={<FolderTabs active="trash" trashCount={count} />}>
-      <ScrollView contentContainerStyle={styles.content} style={styles.flex}>
+      <View style={styles.header}>
         <SectionHeader title={ptBR.trashTitle} />
+      </View>
 
-        <View style={styles.card}>
-          <Text style={styles.body}>{count > 0 ? ptBR.trashCount(count) : ptBR.trashEmpty}</Text>
-          <Text style={styles.hint}>{ptBR.trashPlaceholder}</Text>
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={theme.colors.mauveTab} />
         </View>
-      </ScrollView>
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.listContent}
+          data={items}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={<EmptyTrash />}
+          renderItem={renderItem}
+          style={styles.list}
+        />
+      )}
+
+      {snackbar ? (
+        <Snackbar
+          key={snackbar.id}
+          message={snackbar.message}
+          onDismiss={() => setSnackbar(null)}
+        />
+      ) : null}
+
+      <ActionSheet
+        items={menuItems}
+        onDismiss={() => setMenuItem(null)}
+        title={menu?.title}
+        visible={menu !== null}
+      />
+
+      <ConfirmDialog
+        body={ptBR.purgeConfirmBody}
+        cancelLabel={ptBR.cancel}
+        confirmLabel={ptBR.purgeForever}
+        destructive
+        onConfirm={() => {
+          if (confirmItem) void handlePurge(confirmItem);
+        }}
+        onDismiss={() => setConfirmItem(null)}
+        title={ptBR.purgeConfirmTitle}
+        visible={confirmItem !== null}
+      />
     </ScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  list: {
     flex: 1,
   },
-  content: {
+  listContent: {
     flexGrow: 1,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
   },
-  card: {
-    gap: theme.spacing.sm,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  rowBusy: {
+    opacity: 0.5,
+  },
+  rowMain: {
+    flex: 1,
+    minHeight: 64,
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    paddingLeft: theme.spacing.lg,
+    paddingRight: theme.spacing.sm,
+  },
+  rowMainPressed: {
+    backgroundColor: theme.colors.sageLight,
+  },
+  rowTitle: {
+    ...theme.typography.listTitle,
+    color: theme.colors.ink,
+  },
+  rowMeta: {
+    ...theme.typography.meta,
+    color: theme.colors.inkLight,
+  },
+  rowMenu: {
+    width: 48,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.radii.md,
+  },
+  rowMenuPressed: {
+    backgroundColor: theme.colors.sageLight,
+  },
+  rowMenuLabel: {
+    ...theme.typography.recipeTitle,
+    color: theme.colors.inkLight,
+  },
+  rule: {
+    position: 'absolute',
+    left: theme.spacing.lg,
+    right: theme.spacing.lg,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    opacity: 0.25,
+    backgroundColor: theme.colors.inkLight,
+  },
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.lg,
+  },
+  emptyCard: {
+    width: '100%',
+    alignItems: 'center',
+    gap: theme.spacing.md,
     padding: theme.spacing.xl,
     backgroundColor: theme.colors.cream,
     borderWidth: 1.5,
     borderColor: theme.colors.tan,
     borderRadius: theme.radii.lg,
   },
-  body: {
-    ...theme.typography.body,
+  emptyTitle: {
+    ...theme.typography.sectionTitle,
     color: theme.colors.ink,
+    textAlign: 'center',
   },
-  hint: {
+  emptyBody: {
     ...theme.typography.bodySmall,
     color: theme.colors.inkLight,
+    textAlign: 'center',
+    maxWidth: 240,
   },
 });
