@@ -47,6 +47,7 @@ export default function RootLayout() {
         <Stack.Screen name="r/[id]" />
         <Stack.Screen name="edit/[id]" />
         <Stack.Screen name="import" />
+        <Stack.Screen name="seal" />
       </Stack>
     </SafeAreaProvider>
   );

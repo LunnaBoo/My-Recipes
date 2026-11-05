@@ -24,6 +24,7 @@ import {
 import type { Recipe } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { fetchShare, type SharedRecipe, type ShareError } from '../../lib/api';
+import { parseSeal } from '../../lib/seal';
 import { isValidShareId } from '../../lib/shareLink';
 import { theme } from '../../theme';
 
@@ -205,6 +206,7 @@ export default function SharedRecipeScreen() {
 
   const localHash = existing?.content_hash ?? null;
   const hasNewerCopy = existing !== null && localHash !== share.contentHash;
+  const senderSeal = parseSeal(share.senderSeal);
 
   const actions = own
     ? [
@@ -274,7 +276,7 @@ export default function SharedRecipeScreen() {
 
         <View style={styles.letter}>
           <View style={styles.sealWrap}>
-            <Seal size={80} sigil="star" />
+            <Seal size={80} seal={senderSeal} />
           </View>
 
           <Text style={styles.letterFrom}>

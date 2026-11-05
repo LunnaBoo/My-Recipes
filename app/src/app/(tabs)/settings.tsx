@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -7,27 +7,28 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
 import { FolderTabs } from '../../components/FolderTabs';
 import { ScreenFrame } from '../../components/ScreenFrame';
+import { Seal } from '../../components/Seal';
 import { SectionHeader } from '../../components/SectionHeader';
 import { UpdateDialog } from '../../components/UpdateDialog';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { countTrashed, getProfile, saveProfile } from '../../db/repository';
+import { countTrashed, getProfile } from '../../db/repository';
 import type { Profile } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { BackupError, exportBackup, importBackup } from '../../lib/backupFile';
+import { sealFromStored } from '../../lib/seal';
 import type { UpdateManifest } from '../../lib/updateLogic';
 import { checkForUpdate, recordUpdateCheck, UpdateError } from '../../lib/updater';
 import { theme } from '../../theme';
 
 /** Settings root inside the parchment shell; editing lands in its own lane. */
 export default function SettingsScreen() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [displayName, setDisplayName] = useState('');
   const [trashCount, setTrashCount] = useState(0);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<string | null>(null);
@@ -53,7 +54,6 @@ export default function SettingsScreen() {
         .then(([loadedProfile, trashed]) => {
           if (cancelled) return;
           setProfile(loadedProfile);
-          setDisplayName(loadedProfile?.displayName ?? '');
           setTrashCount(trashed);
         })
         .catch((error: unknown) => {
@@ -65,19 +65,6 @@ export default function SettingsScreen() {
       };
     }, []),
   );
-
-  const persistDisplayName = useCallback(async () => {
-    try {
-      const saved = await saveProfile({
-        displayName,
-        sealJson: profile?.sealJson ?? null,
-      });
-      setProfile(saved);
-      setDisplayName(saved.displayName);
-    } catch (error) {
-      console.warn('[settings] save profile failed:', error);
-    }
-  }, [displayName, profile?.sealJson]);
 
   const handleCheckUpdate = useCallback(async () => {
     if (checkingUpdate) return;
@@ -159,24 +146,28 @@ export default function SettingsScreen() {
     }
   }, [backupAction]);
 
+  const profileSeal = profile ? sealFromStored(profile.sealJson) : null;
+
   return (
     <ScreenFrame corners="top" tabs={<FolderTabs active="settings" trashCount={trashCount} />}>
       <ScrollView contentContainerStyle={styles.content} style={styles.flex}>
         <SectionHeader title={ptBR.settingsTitle} />
 
         <View style={styles.card}>
-          <Text style={styles.label}>{ptBR.displayNameLabel}</Text>
-          <TextInput
-            value={displayName}
-            onChangeText={setDisplayName}
-            onBlur={() => void persistDisplayName()}
-            onSubmitEditing={() => void persistDisplayName()}
-            placeholder={ptBR.displayNamePlaceholder}
-            placeholderTextColor={theme.colors.inkLight}
-            style={styles.input}
-            maxLength={40}
-            returnKeyType="done"
-          />
+          <Pressable
+            accessibilityLabel={ptBR.sealTitle}
+            accessibilityRole="button"
+            onPress={() => router.push('/seal')}
+            style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}
+          >
+            <Text style={styles.actionRowLabel}>{ptBR.sealTitle}</Text>
+            <View style={styles.sealRow}>
+              <Seal size={28} seal={profileSeal} />
+              <Text accessibilityElementsHidden style={styles.chevron}>
+                ›
+              </Text>
+            </View>
+          </Pressable>
         </View>
 
         <View style={styles.card}>
@@ -304,25 +295,10 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.tan,
     borderRadius: theme.radii.lg,
   },
-  label: {
-    ...theme.typography.meta,
-    color: theme.colors.inkLight,
-    textTransform: 'uppercase',
-  },
-  value: {
-    ...theme.typography.body,
-    color: theme.colors.ink,
-  },
-  input: {
-    ...theme.typography.body,
-    color: theme.colors.ink,
-    backgroundColor: theme.colors.cream,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.tan,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    minHeight: 44,
+  sealRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   version: {
     ...theme.typography.meta,

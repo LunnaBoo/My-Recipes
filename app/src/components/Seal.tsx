@@ -1,6 +1,7 @@
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
+import type { ImageSeal, Seal as SealValue } from '../lib/seal';
 import { theme } from '../theme';
 
 export type SealSigil = 'cat' | 'moon' | 'sun' | 'star' | 'mushroom' | 'owl';
@@ -8,6 +9,8 @@ export type SealSigil = 'cat' | 'moon' | 'sun' | 'star' | 'mushroom' | 'owl';
 type SealProps = {
   size?: number;
   sigil?: SealSigil;
+  /** A parsed sender seal; takes precedence over the `sigil` fallback. */
+  seal?: SealValue | null;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -131,10 +134,52 @@ function SigilMark({ sigil }: { sigil: SealSigil }) {
 }
 
 /**
+ * Custom seal: the photo is clipped to a circle and the thin wax rim is drawn
+ * on top, so the rim stays visible even on a light or busy photo.
+ */
+function ImageSealMark({ seal, size }: { seal: ImageSeal; size: number }) {
+  return (
+    <View style={{ width: size, height: size }}>
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          overflow: 'hidden',
+          backgroundColor: theme.colors.navy,
+        }}
+      >
+        <Image
+          accessible={false}
+          resizeMode="cover"
+          source={{ uri: `data:${seal.mime};base64,${seal.data}` }}
+          style={{ width: size, height: size }}
+        />
+      </View>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Svg width={size} height={size} viewBox="0 0 48 48">
+          <Circle
+            cx={24}
+            cy={24}
+            r={23}
+            fill="none"
+            stroke={theme.colors.navyDark}
+            strokeWidth={1.5}
+          />
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
+/**
  * Plain wax-seal disc: one navy fill, one thin rim, cream line-art sigil.
  * Decorative only; the sender name is always shown as text next to it.
  */
-export function Seal({ size = 30, sigil = 'star', style }: SealProps) {
+export function Seal({ size = 30, sigil = 'star', seal, style }: SealProps) {
+  const image = seal?.kind === 'image' ? seal : null;
+  const chosenSigil = seal?.kind === 'sigil' ? seal.id : sigil;
+
   return (
     <View
       accessibilityElementsHidden
@@ -142,17 +187,21 @@ export function Seal({ size = 30, sigil = 'star', style }: SealProps) {
       pointerEvents="none"
       style={style}
     >
-      <Svg width={size} height={size} viewBox="0 0 48 48">
-        <Circle
-          cx={24}
-          cy={24}
-          r={23}
-          fill={theme.colors.navy}
-          stroke={theme.colors.navyDark}
-          strokeWidth={1.5}
-        />
-        <SigilMark sigil={sigil} />
-      </Svg>
+      {image ? (
+        <ImageSealMark seal={image} size={size} />
+      ) : (
+        <Svg width={size} height={size} viewBox="0 0 48 48">
+          <Circle
+            cx={24}
+            cy={24}
+            r={23}
+            fill={theme.colors.navy}
+            stroke={theme.colors.navyDark}
+            strokeWidth={1.5}
+          />
+          <SigilMark sigil={chosenSigil} />
+        </Svg>
+      )}
     </View>
   );
 }

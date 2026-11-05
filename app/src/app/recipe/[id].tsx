@@ -30,6 +30,7 @@ import {
 import type { Profile, Recipe } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { createShare, shareUrlFor, updateShare } from '../../lib/api';
+import { sealFromStored, sealToPayload } from '../../lib/seal';
 import { buildShareMessage, isValidShareId } from '../../lib/shareLink';
 import { theme } from '../../theme';
 
@@ -133,6 +134,8 @@ export default function RecipeViewScreen() {
 
     try {
       const active = await getActiveShare(recipe.id);
+      const profileSeal = profile ? sealFromStored(profile.sealJson) : null;
+      const senderSeal = profileSeal ? sealToPayload(profileSeal) : undefined;
       let shareId: string;
 
       if (active && isValidShareId(active.share_id)) {
@@ -142,6 +145,7 @@ export default function RecipeViewScreen() {
           title: recipe.title,
           body: recipe.body,
           sender: profile?.displayName.trim() || ptBR.someone,
+          senderSeal,
         });
       } else {
         const created = await createShare({
@@ -149,6 +153,7 @@ export default function RecipeViewScreen() {
           title: recipe.title,
           body: recipe.body,
           sender: profile?.displayName.trim() || ptBR.someone,
+          senderSeal,
         });
         await recordShare(recipe.id, created.id);
         shareId = created.id;
@@ -164,7 +169,7 @@ export default function RecipeViewScreen() {
       sharingRef.current = false;
       setSharing(false);
     }
-  }, [profile?.displayName, recipe]);
+  }, [profile, recipe]);
 
   if (!loaded) {
     return (
@@ -195,6 +200,7 @@ export default function RecipeViewScreen() {
     recipe.imported_at !== null;
   const sender = recipe.source_name;
   const importedDate = formatDate(recipe.imported_at);
+  const sourceSeal = imported ? sealFromStored(recipe.source_seal) : null;
 
   let meta = ptBR.stepsLabel(recipe.step_count);
   if (imported && sender) {
@@ -234,7 +240,7 @@ export default function RecipeViewScreen() {
 
         <View style={styles.headerRow}>
           <View style={styles.sender}>
-            {imported ? <Seal size={30} /> : null}
+            {imported ? <Seal size={30} seal={sourceSeal} /> : null}
             {imported && sender ? (
               <Text style={styles.letterFrom}>{ptBR.letterFrom(sender)}</Text>
             ) : null}

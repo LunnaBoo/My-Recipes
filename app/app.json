@@ -63,6 +63,14 @@
         }
       ],
       "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Escolha uma foto para o seu selo.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "expo-status-bar",
       [
         "expo-build-properties",
