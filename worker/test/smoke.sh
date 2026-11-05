@@ -155,6 +155,17 @@ make_payload() {
   ' "$out" "$title" "$body" "$sender"
 }
 
+# Same as make_payload, plus a raw JSON `senderSeal` value.
+make_seal_payload() {
+  local out="$1" title="$2" body="$3" sender="$4" seal="$5"
+  SEAL_JSON="$seal" node -e '
+    const fs = require("fs");
+    const [out, title, body, sender] = process.argv.slice(1);
+    const senderSeal = JSON.parse(process.env.SEAL_JSON);
+    fs.writeFileSync(out, JSON.stringify({ title, body, sender, senderSeal }));
+  ' "$out" "$title" "$body" "$sender"
+}
+
 command -v curl >/dev/null 2>&1 || {
   echo "curl is required" >&2
   exit 2
@@ -439,6 +450,126 @@ check_body_contains "Android action bar uses the intent URL" 'intent://'
 check_body_contains "Android intent targets the app package" 'package=com.lunnaboo.myrecipes'
 check_body_contains "Android intent keeps the https fallback" 'browser_fallback_url='
 check_body_contains "Android copy action is still present" 'Copiar receita</button>'
+
+echo
+echo "== Sender seals =="
+
+# A 1x1 transparent PNG; the server only checks the magic number.
+PNG_B64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+SVG_B64="$(node -e '
+  process.stdout.write(Buffer.from(process.argv[1], "utf8").toString("base64"));
+' '<svg xmlns="http://www.w3.org/2000/svg"></svg>')"
+
+make_seal_payload "$TMP/seal-owl.json" "Receita com selo" "1. Um passo." "Ana" \
+  '{"kind":"sigil","id":"owl"}'
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-owl.json")"
+check_status "POST sigil owl -> 201" 201
+SEAL_ID="$(json_get id)"
+
+STATUS="$(request GET "$BASE/api/recipes/$SEAL_ID")"
+check_status "GET sigil recipe -> 200" 200
+check_eq "stored seal kind" "sigil" "$(json_get senderSeal.kind)"
+check_eq "stored seal id" "owl" "$(json_get senderSeal.id)"
+
+STATUS="$(request GET "$BASE/r/$SEAL_ID")"
+check_status "GET sigil share page -> 200" 200
+check_body_contains "page renders the owl sigil hook" 'data-seal="owl"'
+
+STATUS="$(request GET "$BASE/r/$ID")"
+check_body_contains "recipe without a seal falls back to the default hook" 'data-seal="default"'
+
+make_seal_payload "$TMP/seal-unknown.json" "Selo inválido" "1. Um passo." "Ana" \
+  '{"kind":"sigil","id":"dragon"}'
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-unknown.json")"
+check_status "POST unknown sigil id -> 400" 400
+check_body_contains "unknown sigil body is invalid" '"error":"invalid"'
+
+SEAL_PNG="$(printf '{"kind":"image","mime":"image/png","data":"%s"}' "$PNG_B64")"
+make_seal_payload "$TMP/seal-png.json" "Receita com foto" "1. Um passo." "Ana" "$SEAL_PNG"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-png.json")"
+check_status "POST tiny PNG seal -> 201" 201
+PNG_ID="$(json_get id)"
+
+STATUS="$(request GET "$BASE/api/recipes/$PNG_ID")"
+check_status "GET PNG seal recipe -> 200" 200
+check_eq "stored PNG seal kind" "image" "$(json_get senderSeal.kind)"
+check_eq "stored PNG seal mime" "image/png" "$(json_get senderSeal.mime)"
+
+STATUS="$(request GET "$BASE/r/$PNG_ID")"
+check_status "GET PNG share page -> 200" 200
+check_body_contains "page renders a PNG data URI" 'data:image/png'
+check_body_contains "page marks the image seal hook" 'data-seal="image"'
+
+SEAL_SVG="$(printf '{"kind":"image","mime":"image/svg+xml","data":"%s"}' "$SVG_B64")"
+make_seal_payload "$TMP/seal-svg.json" "Selo SVG" "1. Um passo." "Ana" "$SEAL_SVG"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-svg.json")"
+check_status "POST SVG seal -> 400" 400
+check_body_contains "SVG seal body is invalid" '"error":"invalid"'
+
+# PNG bytes declared as JPEG: valid base64, wrong magic number.
+SEAL_MISMATCH="$(printf '{"kind":"image","mime":"image/jpeg","data":"%s"}' "$PNG_B64")"
+make_seal_payload "$TMP/seal-mismatch.json" "Selo trocado" "1. Um passo." "Ana" "$SEAL_MISMATCH"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-mismatch.json")"
+check_status "POST mime/magic mismatch -> 400" 400
+check_body_contains "mismatch body is invalid" '"error":"invalid"'
+
+BIG_B64="$(node -e '
+  const png = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);
+  const buf = Buffer.alloc(33000);
+  png.copy(buf);
+  process.stdout.write(buf.toString("base64"));
+')"
+SEAL_BIG="$(printf '{"kind":"image","mime":"image/png","data":"%s"}' "$BIG_B64")"
+make_seal_payload "$TMP/seal-big.json" "Selo grande" "1. Um passo." "Ana" "$SEAL_BIG"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-big.json")"
+if [ "$STATUS" = "400" ] || [ "$STATUS" = "413" ]; then
+  pass "POST seal over 32 KB -> ${STATUS}"
+else
+  fail "POST seal over 32 KB (want 400 or 413, got ${STATUS:-no response})"
+fi
+
+make_seal_payload "$TMP/seal-put-cat.json" "Selo mutável" "1. Um passo." "Bia" \
+  '{"kind":"sigil","id":"cat"}'
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-put-cat.json")"
+check_status "PUT fixture with cat seal -> 201" 201
+SEAL_PUT_ID="$(json_get id)"
+STATUS="$(request GET "$BASE/r/$SEAL_PUT_ID")"
+check_body_contains "page starts with the cat seal" 'data-seal="cat"'
+
+make_seal_payload "$TMP/seal-put-owl.json" "Selo mutável" "1. Um passo." "Bia" \
+  '{"kind":"sigil","id":"owl"}'
+STATUS="$(request PUT "$BASE/api/recipes/$SEAL_PUT_ID" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-put-owl.json")"
+check_status "PUT changing the seal -> 200" 200
+
+STATUS="$(request GET "$BASE/api/recipes/$SEAL_PUT_ID")"
+check_eq "PUT updated the stored seal id" "owl" "$(json_get senderSeal.id)"
+STATUS="$(request GET "$BASE/r/$SEAL_PUT_ID")"
+check_body_contains "page reflects the updated owl seal" 'data-seal="owl"'
+check_body_not_contains "page no longer shows the cat seal" 'data-seal="cat"'
 
 echo
 echo "== XSS and copy payload =="

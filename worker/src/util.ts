@@ -3,6 +3,29 @@
  * Everything here assumes untrusted input: escape before interpolating.
  */
 
+/** The six bundled line-art seals. Keep in sync with SPEC §4.3. */
+export const SEAL_NAMES = [
+  "cat",
+  "moon",
+  "sun",
+  "star",
+  "mushroom",
+  "owl",
+] as const;
+
+export type SealName = (typeof SEAL_NAMES)[number];
+
+export function isSealName(value: unknown): value is SealName {
+  return (
+    typeof value === "string" &&
+    (SEAL_NAMES as readonly string[]).includes(value)
+  );
+}
+
+export type SenderSeal =
+  | { kind: "sigil"; id: SealName }
+  | { kind: "image"; mime: "image/jpeg" | "image/png"; data: string };
+
 export interface Recipe {
   id: string;
   v: 1;
@@ -10,6 +33,7 @@ export interface Recipe {
   body: string;
   stepCount: number;
   sender: string;
+  senderSeal?: SenderSeal;
   createdAt: number;
 }
 
@@ -131,6 +155,115 @@ export function isValidId(value: string): boolean {
   return ID_RE.test(value);
 }
 
+/** Decoded seal cap: 32 KB (SPEC §4.3). */
+export const MAX_SEAL_BYTES = 32 * 1024;
+
+/**
+ * Max canonical base64 length for MAX_SEAL_BYTES: 4 * ceil(32768 / 3).
+ * Used to reject obviously oversized payloads before decoding them.
+ */
+const MAX_SEAL_BASE64_CHARS = 43692;
+
+const BASE64_RE = /^[A-Za-z0-9+/]*={0,2}$/;
+
+/**
+ * Strictly decode standard base64. Returns both the bytes and their canonical
+ * re-encoding; the canonical form is what gets stored, never the raw input.
+ */
+function decodeBase64(
+  value: string,
+): { bytes: Uint8Array; canonical: string } | null {
+  if (value.length === 0 || value.length % 4 !== 0) return null;
+  if (!BASE64_RE.test(value)) return null;
+
+  let binary: string;
+  try {
+    binary = atob(value);
+  } catch {
+    return null;
+  }
+
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return { bytes, canonical: btoa(binary) };
+}
+
+/** Magic-number check for the two allowed raster formats. */
+function matchesMagic(
+  bytes: Uint8Array,
+  mime: "image/jpeg" | "image/png",
+): boolean {
+  if (mime === "image/jpeg") {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  return (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  );
+}
+
+export type SealResult =
+  | { ok: true; value: SenderSeal | undefined }
+  | { ok: false; status: 400 | 413 };
+
+/**
+ * Validate an optional senderSeal from a write body. Absent/null clears the
+ * seal; an unknown shape, bad sigil id, non-raster mime, invalid base64,
+ * wrong magic number or oversize image is rejected. The returned value is
+ * rebuilt from validated primitives — raw input is never echoed back.
+ */
+export function validateSeal(input: unknown): SealResult {
+  if (input === undefined || input === null) {
+    return { ok: true, value: undefined };
+  }
+  if (typeof input !== "object" || Array.isArray(input)) {
+    return { ok: false, status: 400 };
+  }
+
+  const record = input as Record<string, unknown>;
+
+  if (record.kind === "sigil") {
+    if (!isSealName(record.id)) return { ok: false, status: 400 };
+    return { ok: true, value: { kind: "sigil", id: record.id } };
+  }
+
+  if (record.kind === "image") {
+    const mime = record.mime;
+    if (mime !== "image/jpeg" && mime !== "image/png") {
+      return { ok: false, status: 400 };
+    }
+    if (typeof record.data !== "string") return { ok: false, status: 400 };
+    if (record.data.length > MAX_SEAL_BASE64_CHARS) {
+      return { ok: false, status: 413 };
+    }
+
+    const decoded = decodeBase64(record.data);
+    if (!decoded) return { ok: false, status: 400 };
+    if (decoded.bytes.length > MAX_SEAL_BYTES) {
+      return { ok: false, status: 413 };
+    }
+    if (!matchesMagic(decoded.bytes, mime)) {
+      return { ok: false, status: 400 };
+    }
+
+    return {
+      ok: true,
+      value: { kind: "image", mime, data: decoded.canonical },
+    };
+  }
+
+  return { ok: false, status: 400 };
+}
+
 export type RecipeInputResult =
   | { ok: true; value: Omit<Recipe, "id" | "v" | "stepCount" | "createdAt"> }
   | { ok: false; status: 400 | 413 };
@@ -165,5 +298,13 @@ export function validateRecipeInput(input: unknown): RecipeInputResult {
     if (charLength(sender) > 40) return { ok: false, status: 400 };
   }
 
-  return { ok: true, value: { title, body, sender } };
+  // Unknown extra keys (including any legacy tag fields) are ignored; only
+  // the validated seal shape is carried into the stored recipe.
+  const seal = validateSeal(record.senderSeal);
+  if (!seal.ok) return { ok: false, status: seal.status };
+
+  return {
+    ok: true,
+    value: { title, body, sender, senderSeal: seal.value },
+  };
 }

@@ -1,9 +1,10 @@
-import type { Recipe } from "./util";
+import type { Recipe, SealName, SenderSeal } from "./util";
 import {
   buildDescription,
   escapeAttr,
   escapeHtml,
   formatDate,
+  isSealName,
 } from "./util";
 import { renderMarkdown, toWhatsAppText } from "./markdown";
 
@@ -50,17 +51,6 @@ ${flourish(true)}
  * The circle is the only container: one fill, one thin rim.
  * ------------------------------------------------------------------ */
 
-type SealName = "cat" | "moon" | "sun" | "star" | "mushroom" | "owl";
-
-const SEAL_NAMES: readonly SealName[] = [
-  "cat",
-  "moon",
-  "sun",
-  "star",
-  "mushroom",
-  "owl",
-];
-
 const SIGILS: Record<SealName, string> = {
   star: `<path d="M24,7 L28.2,18.2 L40,18.2 L30.4,26 L34.2,38 L24,30.6 L13.8,38 L17.6,26 L8,18.2 L19.8,18.2 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
   owl: `<path d="M12,38 L12,22 C12,14 18,8 24,8 C30,8 36,14 36,22 L36,38 C36,40 34,42 32,42 L16,42 C14,42 12,40 12,38 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -88,26 +78,58 @@ const SIGILS: Record<SealName, string> = {
 <circle cx="30" cy="20" r="1.6" fill="currentColor"/>`,
 };
 
-function isSealName(value: string | undefined): value is SealName {
-  return !!value && (SEAL_NAMES as readonly string[]).includes(value);
-}
-
-/**
- * Render one seal. `size` is a preset, not a pixel value, so the circle
- * stays one consistent container at every call site.
- */
-export function renderSeal(
-  seal: string | undefined,
-  size: "sm" | "lg" = "lg",
+function renderSigilSeal(
+  name: SealName,
+  size: "sm" | "lg",
+  hook: string,
 ): string {
-  const name: SealName = isSealName(seal) ? seal : "star";
-  return `<span class="seal seal-${size}" aria-hidden="true">
+  return `<span class="seal seal-${size}" data-seal="${escapeAttr(hook)}" aria-hidden="true">
 <svg class="seal-svg" viewBox="0 0 80 80" focusable="false">
 <circle cx="40" cy="40" r="39" fill="#2F3B52"/>
 <g transform="translate(16 16)">${SIGILS[name]}</g>
 <circle cx="40" cy="40" r="38" fill="none" stroke="#202B40" stroke-width="2"/>
 </svg>
 </span>`;
+}
+
+/**
+ * Image seal: the decoded bytes are rebuilt as a data URI from the validated
+ * mime, then clipped to the same navy circle. The rim sits on top so the
+ * photo never paints over it.
+ */
+function renderImageSeal(
+  seal: SenderSeal & { kind: "image" },
+  size: "sm" | "lg",
+): string {
+  const src = `data:${seal.mime};base64,${seal.data}`;
+  return `<span class="seal seal-${size} seal-image" data-seal="image" aria-hidden="true">
+<img class="seal-photo" src="${escapeAttr(src)}" alt="">
+<span class="seal-rim"></span>
+</span>`;
+}
+
+/**
+ * Render one seal. `size` is a preset, not a pixel value, so the circle
+ * stays one consistent container at every call site. A bare sigil name is
+ * accepted for static pages; anything unrecognised falls back to the star.
+ * The `data-seal` hook is the sigil id, `image`, or `default`.
+ */
+export function renderSeal(
+  seal: SenderSeal | SealName | undefined,
+  size: "sm" | "lg" = "lg",
+): string {
+  if (typeof seal === "string") {
+    return isSealName(seal)
+      ? renderSigilSeal(seal, size, seal)
+      : renderSigilSeal("star", size, "default");
+  }
+  if (seal?.kind === "sigil" && isSealName(seal.id)) {
+    return renderSigilSeal(seal.id, size, seal.id);
+  }
+  if (seal?.kind === "image") {
+    return renderImageSeal(seal, size);
+  }
+  return renderSigilSeal("star", size, "default");
 }
 
 const ERROR_ORNAMENT = `<svg class="error-ornament" viewBox="0 0 80 80" aria-hidden="true" focusable="false">
@@ -301,6 +323,26 @@ body {
   width: 100%;
   height: 100%;
   color: var(--cream);
+}
+.seal-image {
+  position: relative;
+  overflow: hidden;
+  background: var(--navy);
+}
+.seal-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.seal-rim {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--navy-dark);
+  border-radius: 50%;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 /* Share page */
@@ -641,7 +683,6 @@ export interface SharePageOptions {
   origin: string;
   android: boolean;
   apkAvailable: boolean;
-  seal?: string;
 }
 
 export function renderSharePage(
@@ -659,9 +700,6 @@ export function renderSharePage(
   const intentUrl =
     `intent://${host}/r/${recipe.id}#Intent;scheme=https;` +
     `package=${ANDROID_PACKAGE};S.browser_fallback_url=${fallbackUrl};end`;
-
-  // TODO(M2): read senderSeal from the stored recipe once the API validates it.
-  const seal = options.seal;
 
   const senderLine = recipe.sender
     ? `Enviada por ${escapeHtml(recipe.sender)}`
@@ -695,7 +733,7 @@ ${ivyCorner("br")}
 <main class="page-content">
 <div class="page-scroll">
 ${sectionHeader("Receita")}
-<div class="share-seal-wrap">${renderSeal(seal, "lg")}</div>
+<div class="share-seal-wrap">${renderSeal(recipe.senderSeal, "lg")}</div>
 <div class="share-from">${fromLine}</div>
 <div class="share-head">
 <h1 class="web-recipe-title">${escapeHtml(recipe.title)}</h1>

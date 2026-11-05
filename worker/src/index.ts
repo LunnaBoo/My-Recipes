@@ -8,6 +8,7 @@ import {
   isAndroid,
   timingSafeEqual,
   validateRecipeInput,
+  validateSeal,
 } from "./util";
 
 export interface Env {
@@ -34,7 +35,8 @@ const TOMBSTONE_TTL_SECONDS = 30 * 24 * 60 * 60;
 // Upper bound for the raw request body (the validator enforces the tighter
 // per-field limits) and for the serialized KV value.
 const MAX_REQUEST_BYTES = 200_000;
-const MAX_STORED_BYTES = 100 * 1024;
+// 64 KB body + ~43 KB base64 seal + metadata still fit comfortably.
+const MAX_STORED_BYTES = 128 * 1024;
 
 const DEFAULT_VERSION = {
   versionCode: 1,
@@ -166,6 +168,11 @@ function normalizeRecipe(value: unknown, id: string): Recipe | null {
       ? record.createdAt
       : 0;
 
+  // Re-validate the seal on read. A legacy or malformed value in KV degrades
+  // to "no seal" (and therefore the default star) instead of breaking the page.
+  const seal = validateSeal(record.senderSeal);
+  const senderSeal = seal.ok ? seal.value : undefined;
+
   return {
     // Always trust the KV key over the embedded id so the canonical URL,
     // lookup path, and JSON payload cannot disagree.
@@ -175,6 +182,7 @@ function normalizeRecipe(value: unknown, id: string): Recipe | null {
     body,
     stepCount,
     sender,
+    senderSeal,
     createdAt,
   };
 }
@@ -293,6 +301,7 @@ async function handleCreate(
     body: parsed.value.body,
     stepCount: countSteps(parsed.value.body),
     sender: parsed.value.sender,
+    senderSeal: parsed.value.senderSeal,
     createdAt: Date.now(),
   };
 
@@ -347,6 +356,7 @@ async function handleUpdate(
     body: parsed.value.body,
     stepCount: countSteps(parsed.value.body),
     sender: parsed.value.sender,
+    senderSeal: parsed.value.senderSeal,
   };
 
   if (!isStorable(recipe)) {
