@@ -51,7 +51,7 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] **Seals** — Worker validation/rendering deployed; picker, payload, and rendering in the app shipped in `28c7351`. with six sigils + photo; store in `profile`; send
       `senderSeal` in the share payload; Worker validation + storage; render on the web page
       and in the import letter; fall back to the default star.
-- [ ] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — in progress.
+- [x] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — `b71e5dd`.
 
 ### v4 — polish (versionCode 4)
 - [ ] Single custom launcher icon + splash (currently Expo template art).
@@ -77,7 +77,7 @@ in-app look only — no `activity-alias` icon switching, no app restart on theme
 ### v3 progress notes
 - Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as sigil or circular photo. 138 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
-- Remaining for v3: editor toolbar + preview, then the build (versionCode 3, 1.2.0).
+- All v3 features are implemented; next is the build (versionCode 3, 1.2.0) and release.
 
 ## Verification debt
 
@@ -103,3 +103,4 @@ These have never run on a device and need a phone pass:
 |---|---|---|---|
 | 1.0.0 | 1 | 2026-11-04 | First APK: local recipes, sharing, import letter. |
 | 1.1.0 | 2 | 2026-11-05 | Parchment menus/dialogs, dedupe fix, re-publish, updater. |
+| 1.2.0 | 3 | pending | Seals, backup/import, trash, editor toolbar + preview, UI fixes. |
