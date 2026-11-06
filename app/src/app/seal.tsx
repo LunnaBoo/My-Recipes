@@ -15,6 +15,7 @@ import {
 import { FolderTabs } from '../components/FolderTabs';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { Seal } from '../components/Seal';
+import { countUnread } from '../db/mailboxRepository';
 import { getProfile, saveProfile } from '../db/repository';
 import { ptBR } from '../i18n/pt-BR';
 import {
@@ -71,16 +72,24 @@ export default function SealScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageError, setMessageError] = useState(false);
+  const [mailboxCount, setMailboxCount] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
 
-      getProfile()
-        .then((profile) => {
+      Promise.all([
+        getProfile(),
+        countUnread().catch((error: unknown) => {
+          console.warn('[seal] unread count failed:', error);
+          return 0;
+        }),
+      ])
+        .then(([profile, unread]) => {
           if (cancelled) return;
           setDisplayName(profile.displayName);
           setSeal(sealFromStored(profile.sealJson));
+          setMailboxCount(unread);
         })
         .catch((error: unknown) => {
           console.warn('[seal] profile load failed:', error);
@@ -202,7 +211,7 @@ export default function SealScreen() {
   }, [busy, commitProfile, displayName, seal, showMessage]);
 
   return (
-    <ScreenFrame corners="top" tabs={<FolderTabs active="settings" />}>
+    <ScreenFrame corners="top" tabs={<FolderTabs active="settings" mailboxCount={mailboxCount} />}>
       <View style={styles.topBar}>
         <Text style={styles.headerTitle}>{ptBR.sealTitle}</Text>
         <Pressable

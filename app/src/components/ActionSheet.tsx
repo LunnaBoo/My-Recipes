@@ -24,6 +24,7 @@ export type ActionSheetItem = {
 type ActionSheetProps = {
   visible: boolean;
   title?: string;
+  subtitle?: string;
   items: readonly ActionSheetItem[];
   onDismiss: () => void;
 };
@@ -39,6 +40,7 @@ type ActionSheetProps = {
 export function ActionSheet({
   visible,
   title,
+  subtitle,
   items,
   onDismiss,
 }: ActionSheetProps) {
@@ -84,6 +86,7 @@ export function ActionSheet({
               <Text accessibilityRole="header" style={styles.title}>
                 {title}
               </Text>
+              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
               <View pointerEvents="none" style={styles.titleRule} />
             </>
           ) : null}
@@ -161,6 +164,13 @@ const styles = StyleSheet.create({
     color: theme.colors.ink,
     textAlign: 'center',
     paddingHorizontal: theme.spacing.xl,
+  },
+  subtitle: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.inkLight,
+    textAlign: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xs,
   },
   titleRule: {
     height: StyleSheet.hairlineWidth,

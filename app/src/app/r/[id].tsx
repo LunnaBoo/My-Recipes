@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import { ScreenFrame } from '../../components/ScreenFrame';
 import { Seal } from '../../components/Seal';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Snackbar } from '../../components/Snackbar';
+import { markLetterRead } from '../../db/mailboxRepository';
 import {
   createRecipe,
   getRecipeByActiveShareId,
@@ -51,7 +52,11 @@ function isRetryable(error: LoadError): boolean {
 }
 
 export default function SharedRecipeScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, letter, from } = useLocalSearchParams<{
+    id: string;
+    letter?: string;
+    from?: string;
+  }>();
   const router = useRouter();
 
   const [share, setShare] = useState<SharedRecipe | null>(null);
@@ -64,6 +69,14 @@ export default function SharedRecipeScreen() {
 
   const requestRef = useRef(0);
   const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (letter) {
+      markLetterRead(letter).catch((error: unknown) => {
+        console.warn('[share] mark read failed:', error);
+      });
+    }
+  }, [letter]);
 
   const load = useCallback(async () => {
     const ticket = requestRef.current + 1;
@@ -161,8 +174,12 @@ export default function SharedRecipeScreen() {
   }, [existing, router, share]);
 
   const discard = useCallback(() => {
-    router.replace('/');
-  }, [router]);
+    if (from === 'mailbox') {
+      router.replace('/mailbox');
+    } else {
+      router.replace('/');
+    }
+  }, [from, router]);
 
   if (loading) {
     return (

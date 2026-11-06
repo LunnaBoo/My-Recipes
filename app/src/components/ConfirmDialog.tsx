@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -24,6 +25,13 @@ type ConfirmDialogProps = {
   destructive?: boolean;
   /** Single "Entendi" button for validation and notice messages. */
   noticeOnly?: boolean;
+  /** Optional text field rendered between the body and the buttons. */
+  input?: {
+    value: string;
+    onChangeText: (value: string) => void;
+    placeholder?: string;
+    autoFocus?: boolean;
+  };
 };
 
 /**
@@ -43,6 +51,7 @@ export function ConfirmDialog({
   onDismiss,
   destructive = false,
   noticeOnly = false,
+  input,
 }: ConfirmDialogProps) {
   const panelRef = useRef<ComponentRef<typeof View>>(null);
   const { fontScale } = useWindowDimensions();
@@ -87,6 +96,16 @@ export function ConfirmDialog({
           </Text>
 
           {body ? <Text style={styles.body}>{body}</Text> : null}
+
+          {input ? (
+            <TextInput
+              autoFocus={input.autoFocus}
+              onChangeText={input.onChangeText}
+              placeholder={input.placeholder}
+              style={styles.input}
+              value={input.value}
+            />
+          ) : null}
 
           <View style={[styles.actions, stacked && styles.actionsStacked]}>
             {noticeOnly ? (
@@ -187,6 +206,17 @@ const styles = StyleSheet.create({
     ...theme.typography.bodySmall,
     color: theme.colors.ink,
     textAlign: 'center',
+  },
+  input: {
+    ...theme.typography.body,
+    minHeight: 48,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radii.md,
+    borderWidth: 1.5,
+    borderColor: theme.colors.inkLight,
+    backgroundColor: theme.colors.cream,
+    color: theme.colors.ink,
   },
   actions: {
     flexDirection: 'row',

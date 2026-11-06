@@ -16,6 +16,7 @@ import { Seal } from '../../components/Seal';
 import { SectionHeader } from '../../components/SectionHeader';
 import { UpdateDialog } from '../../components/UpdateDialog';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { countUnread } from '../../db/mailboxRepository';
 import { countTrashed, getProfile } from '../../db/repository';
 import type { Profile } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [trashCount, setTrashCount] = useState(0);
+  const [mailboxCount, setMailboxCount] = useState(0);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<string | null>(null);
   const [updateManifest, setUpdateManifest] = useState<UpdateManifest | null>(null);
@@ -50,11 +52,16 @@ export default function SettingsScreen() {
           console.warn('[settings] trash count failed:', error);
           return 0;
         }),
+        countUnread().catch((error: unknown) => {
+          console.warn('[settings] unread count failed:', error);
+          return 0;
+        }),
       ])
-        .then(([loadedProfile, trashed]) => {
+        .then(([loadedProfile, trashed, unread]) => {
           if (cancelled) return;
           setProfile(loadedProfile);
           setTrashCount(trashed);
+          setMailboxCount(unread);
         })
         .catch((error: unknown) => {
           console.warn('[settings] load failed:', error);
@@ -149,7 +156,7 @@ export default function SettingsScreen() {
   const profileSeal = profile ? sealFromStored(profile.sealJson) : null;
 
   return (
-    <ScreenFrame corners="top" tabs={<FolderTabs active="settings" trashCount={trashCount} />}>
+    <ScreenFrame corners="top" tabs={<FolderTabs active="settings" mailboxCount={mailboxCount} />}>
       <ScrollView contentContainerStyle={styles.content} style={styles.flex}>
         <SectionHeader title={ptBR.settingsTitle} />
 
@@ -167,6 +174,43 @@ export default function SettingsScreen() {
                 ›
               </Text>
             </View>
+          </Pressable>
+        </View>
+
+        <View style={styles.card}>
+          <Pressable
+            accessibilityLabel={ptBR.mailboxSettingsRow}
+            accessibilityRole="button"
+            onPress={() => router.push('/mailbox/contacts')}
+            style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}
+          >
+            <Text style={styles.actionRowLabel}>{ptBR.mailboxSettingsRow}</Text>
+            <Text accessibilityElementsHidden style={styles.chevron}>
+              ›
+            </Text>
+          </Pressable>
+
+          <View pointerEvents="none" style={styles.rule} />
+
+          <Pressable
+            accessibilityLabel={ptBR.trashRow}
+            accessibilityRole="button"
+            onPress={() => router.push('/trash')}
+            style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}
+          >
+            <View style={styles.rowWithBadge}>
+              <Text style={styles.actionRowLabel}>{ptBR.trashRow}</Text>
+              {trashCount > 0 ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeLabel}>
+                    {trashCount > 99 ? '99+' : trashCount}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <Text accessibilityElementsHidden style={styles.chevron}>
+              ›
+            </Text>
           </Pressable>
         </View>
 
@@ -299,6 +343,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
+  },
+  rowWithBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  badge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.maroon,
+  },
+  badgeLabel: {
+    ...theme.typography.meta,
+    color: theme.colors.cream,
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0,
   },
   version: {
     ...theme.typography.meta,

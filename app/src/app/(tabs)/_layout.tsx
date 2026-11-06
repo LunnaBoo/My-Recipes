@@ -15,7 +15,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: ptBR.recipesTab }} />
-      <Tabs.Screen name="trash" options={{ title: ptBR.trashTab }} />
+      <Tabs.Screen name="mailbox" options={{ title: ptBR.mailboxTab }} />
       <Tabs.Screen name="settings" options={{ title: ptBR.settingsTab }} />
     </Tabs>
   );

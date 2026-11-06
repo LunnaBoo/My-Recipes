@@ -45,6 +45,8 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="recipe/[id]" />
         <Stack.Screen name="r/[id]" />
+        <Stack.Screen name="mailbox/contacts" />
+        <Stack.Screen name="trash" />
         <Stack.Screen name="edit/[id]" />
         <Stack.Screen name="import" />
         <Stack.Screen name="seal" />

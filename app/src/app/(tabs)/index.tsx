@@ -22,8 +22,8 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { Snackbar } from '../../components/Snackbar';
 import { UpdateDialog } from '../../components/UpdateDialog';
 import { IvyWreath } from '../../components/ornaments';
+import { countUnread } from '../../db/mailboxRepository';
 import {
-  countTrashed,
   listRecipes,
   restoreRecipe,
   softDelete,
@@ -69,7 +69,7 @@ export default function RecipeListScreen() {
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
-  const [trashCount, setTrashCount] = useState(0);
+  const [mailboxCount, setMailboxCount] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [menuItem, setMenuItem] = useState<RecipeListItem | null>(null);
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
@@ -108,15 +108,15 @@ export default function RecipeListScreen() {
 
       Promise.all([
         listRecipes({ query: debouncedQuery, pinnedOnly }),
-        countTrashed().catch((error: unknown) => {
-          console.warn('[trash] count failed:', error);
+        countUnread().catch((error: unknown) => {
+          console.warn('[mailbox] unread count failed:', error);
           return 0;
         }),
       ])
-        .then(([rows, trashed]) => {
+        .then(([rows, unread]) => {
           if (cancelled) return;
           setItems(rows);
-          setTrashCount(trashed);
+          setMailboxCount(unread);
         })
         .catch((error: unknown) => {
           console.warn('[recipes] list failed:', error);
@@ -215,7 +215,7 @@ export default function RecipeListScreen() {
   );
 
   return (
-    <ScreenFrame corners="side" tabs={<FolderTabs active="recipes" trashCount={trashCount} />}>
+    <ScreenFrame corners="side" tabs={<FolderTabs active="recipes" mailboxCount={mailboxCount} />}>
       <View style={styles.header}>
         <SearchField onChangeText={setQuery} value={query} />
         <SectionHeader title={ptBR.recipesHeader} />

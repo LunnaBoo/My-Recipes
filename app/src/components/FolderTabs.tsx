@@ -4,42 +4,44 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ptBR } from '../i18n/pt-BR';
 import { theme } from '../theme';
 
-export type FolderTabKey = 'recipes' | 'trash' | 'settings';
+export type FolderTabKey = 'recipes' | 'mailbox' | 'settings';
 
 type FolderTabsProps = {
   active: FolderTabKey;
-  /** Only shown on the Lixeira tab, and only when greater than zero. */
-  trashCount?: number;
+  /** Unread letter count, shown on the Cartas tab when greater than zero. */
+  mailboxCount?: number;
 };
 
 type TabDefinition = {
   key: FolderTabKey;
   label: string;
-  href: '/' | '/trash' | '/settings';
+  href: '/' | '/mailbox' | '/settings';
   color: string;
 };
 
 const TABS: readonly TabDefinition[] = [
   { key: 'recipes', label: ptBR.recipesTab, href: '/', color: theme.colors.oliveTab },
-  { key: 'trash', label: ptBR.trashTab, href: '/trash', color: theme.colors.mauveTab },
+  { key: 'mailbox', label: ptBR.mailboxTab, href: '/mailbox', color: theme.colors.mauveTab },
   { key: 'settings', label: ptBR.settingsTab, href: '/settings', color: theme.colors.tanTab },
 ];
 
 /**
- * Folder-style tabs that sit on the top edge of the parchment sheet.
+ * Compact, left-aligned folder tabs that sit on the top edge of the parchment
+ * sheet. Each tab is only as wide as its label needs (with comfortable padding);
+ * the remaining row space stays empty.
  *
- * The active tab is a taller, opaque face whose bottom extends 8dp past the
- * tab row so it visually continues into the panel. Inactive tabs are shorter,
- * dimmed, and end where the parchment begins.
+ * The active tab is taller and fully opaque, with its bottom edge extending
+ * past the tab row so it visually continues into the panel. Inactive tabs are
+ * shorter, dimmed, and sit at the bottom of the row.
  */
-export function FolderTabs({ active, trashCount = 0 }: FolderTabsProps) {
+export function FolderTabs({ active, mailboxCount = 0 }: FolderTabsProps) {
   const router = useRouter();
 
   return (
     <View accessibilityRole="tablist" style={styles.bar}>
       {TABS.map((tab) => {
         const isActive = tab.key === active;
-        const showBadge = tab.key === 'trash' && trashCount > 0;
+        const showBadge = tab.key === 'mailbox' && mailboxCount > 0;
 
         return (
           <Pressable
@@ -47,7 +49,7 @@ export function FolderTabs({ active, trashCount = 0 }: FolderTabsProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={
-              showBadge ? `${tab.label}, ${ptBR.trashCount(trashCount)}` : tab.label
+              showBadge ? `${tab.label}, ${ptBR.mailboxCount(mailboxCount)}` : tab.label
             }
             onPress={() => {
               if (!isActive) router.navigate(tab.href);
@@ -73,7 +75,9 @@ export function FolderTabs({ active, trashCount = 0 }: FolderTabsProps) {
 
               {showBadge ? (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeLabel}>{trashCount > 99 ? '99+' : trashCount}</Text>
+                  <Text style={styles.badgeLabel}>
+                    {mailboxCount > 99 ? '99+' : mailboxCount}
+                  </Text>
                 </View>
               ) : null}
             </View>
@@ -92,29 +96,27 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabHit: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
     minWidth: 80,
     height: 48,
-    minHeight: 48,
+    justifyContent: 'flex-end',
   },
   face: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 14,
     borderTopLeftRadius: theme.radii.tabTop,
     borderTopRightRadius: theme.radii.tabTop,
   },
   faceActive: {
-    height: 56,
-    paddingTop: theme.spacing.sm,
+    height: 54,
+    marginBottom: -6,
+    paddingTop: 12,
     zIndex: 2,
   },
   faceInactive: {
-    top: 10,
     height: 38,
     opacity: 0.72,
   },
@@ -125,8 +127,8 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: -4,
+    top: 5,
+    right: 5,
     minWidth: 18,
     height: 18,
     borderRadius: 9,

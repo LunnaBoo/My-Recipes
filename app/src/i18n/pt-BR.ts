@@ -2,10 +2,28 @@ function stepLabel(count: number): string {
   return count === 1 ? '1 passo' : `${count} passos`;
 }
 
+function timeAgo(sentAt: number): string {
+  const diff = Date.now() - sentAt;
+  const minutes = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+
+  if (diff < 0) return 'agora';
+  if (minutes < 1) return 'agora';
+  if (minutes < 60) return `há ${minutes} min`;
+  if (hours === 1) return 'há 1 h';
+  if (hours < 24) return `há ${hours} h`;
+  if (days === 1) return 'ontem';
+  if (days < 7) return `há ${days} d`;
+  if (days < 30) return `há ${Math.floor(days / 7)} sem`;
+  return `há ${Math.floor(days / 30)} m`;
+}
+
 export const ptBR = {
   appName: 'My Recipes',
   recipesHeader: 'Receitas',
   recipesTab: 'Receitas',
+  mailboxTab: 'Cartas',
   trashTab: 'Lixeira',
   settingsTab: 'Ajustes',
   recipeHeader: 'Receita',
@@ -198,6 +216,78 @@ export const ptBR = {
   shareLinkTitle: 'Link de receita',
   shareLinkDetected: 'Toque em Abrir link para ver a receita.',
   openLink: 'Abrir link',
+
+  // Mailbox
+  mailboxHeader: 'Caixa de entrada',
+  mailboxEmpty: 'Nenhuma carta ainda.',
+  mailboxEmptyBody: 'Compartilhe uma receita com um contato.',
+  mailboxCount: (count: number) =>
+    count === 1 ? '1 carta não lida' : `${count} cartas não lidas`,
+  mailboxItemAccessibility: (sender: string, title: string, unread: boolean) =>
+    `${unread ? 'Carta não lida de' : 'Carta de'} ${sender}, ${title}`,
+  mailboxItemHint: 'Toque para abrir. Segure para marcar como lida ou remover.',
+  letterUnavailable: 'Carta indisponível.',
+  markRead: 'Marcar como lida',
+  markUnread: 'Marcar como não lida',
+  removeLetter: 'Remover carta',
+  removeLetterConfirmTitle: 'Remover carta?',
+  removeLetterConfirmBody: 'A carta será removida da sua caixa de entrada.',
+  letterRemoveFailed: 'Não foi possível remover a carta.',
+  mailboxLoadFailed: 'Não foi possível atualizar as cartas.',
+  offlineNote: 'Sem conexão. Mostrando cartas salvas.',
+  timeAgo,
+
+  // Send flow
+  sendMenuTitle: 'Enviar receita',
+  sendToContact: 'Enviar para um contato',
+  shareLink: 'Compartilhar link',
+  contactPickerTitle: 'Escolha um contato',
+  noContactsTitle: 'Nenhum contato ainda',
+  noContactsBody: 'Adicione um contato em Cartas → Contatos.',
+  noContactsAdd: 'Adicionar contato',
+  letterSent: (name: string) => `Carta enviada para ${name}.`,
+  letterSendFailed: 'Não foi possível enviar a carta.',
+  letterMailboxFull: 'A caixa de entrada desta pessoa está cheia.',
+
+  // Contacts
+  addContact: 'Adicionar contato',
+  contactsTitle: 'Contatos',
+  contactsEmpty: 'Nenhum contato ainda.',
+  contactsEmptyBody: 'Adicione o endereço de quem pode te enviar receitas.',
+  yourAddress: 'Seu endereço',
+  addressNotReady: 'Seu endereço aparece quando você abre a Caixa de entrada pela primeira vez.',
+  copyAddress: 'Copiar endereço',
+  shareAddress: 'Compartilhar endereço',
+  addressCopied: 'Endereço copiado.',
+  addressSharedTitle: 'Meu endereço no My Recipes',
+  contactName: 'Nome do contato',
+  contactAddress: 'Endereço',
+  contactAddressPlaceholder: 'Cole o endereço da pessoa…',
+  contactNamePlaceholder: 'Como chamar este contato',
+  contactInvalidAddress: 'Endereço inválido.',
+  contactNotFound: 'Endereço não encontrado.',
+  contactExists: 'Este contato já está salvo.',
+  contactResolveFailed: 'Não foi possível buscar este endereço.',
+  contactAddFailed: 'Não foi possível adicionar o contato.',
+  contactEditFailed: 'Não foi possível salvar o nome.',
+  contactRemoveFailed: 'Não foi possível remover o contato.',
+  contactAddConfirmTitle: (name: string) => `Adicionar ${name}?`,
+  contactAddConfirmBody: (address: string) =>
+    `Este endereço será salvo na sua lista de contatos:\n${address}`,
+  contactSaveName: 'Salvar nome',
+  contactEditName: 'Editar nome',
+  contactRemove: 'Remover contato',
+  contactRemoveConfirmTitle: 'Remover contato?',
+  contactRemoveConfirmBody: (name: string) =>
+    `${name} será removido da sua lista de contatos.`,
+  contactLastSent: (when: string) => `Enviado ${when}`,
+  contactNeverSent: 'Nunca enviado',
+  contactAccessibility: (name: string, address: string) => `${name}, ${address}`,
+  contactHint: 'Toque e segure para editar o nome ou remover.',
+
+  // Settings rows
+  trashRow: 'Lixeira',
+  mailboxSettingsRow: 'Caixa de entrada',
 } as const;
 
 export type Strings = typeof ptBR;

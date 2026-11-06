@@ -19,6 +19,8 @@ import { ScreenFrame } from '../../components/ScreenFrame';
 import { Seal } from '../../components/Seal';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Snackbar } from '../../components/Snackbar';
+import type { ContactRow } from '../../db/types';
+import { listContacts } from '../../db/mailboxRepository';
 import {
   getActiveShare,
   getProfile,
@@ -30,13 +32,16 @@ import {
 import type { Profile, Recipe } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { createShare, shareUrlFor, updateShare } from '../../lib/api';
+import { sendLetter, isMailboxApiError } from '../../lib/mailboxApi';
+import { ensureMailbox } from '../../lib/mailboxSession';
 import { sealFromStored, sealToPayload } from '../../lib/seal';
 import { buildShareMessage, isValidShareId } from '../../lib/shareLink';
+import { newId } from '../../lib/newId';
 import { theme } from '../../theme';
 
 type SnackbarState = {
   message: string;
-  retry?: boolean;
+  retry?: () => void;
 };
 
 export default function RecipeViewScreen() {
@@ -49,6 +54,9 @@ export default function RecipeViewScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
+  const [sendSheet, setSendSheet] = useState<'none' | 'menu' | 'contacts' | 'no-contacts'>('none');
+  const [contacts, setContacts] = useState<ContactRow[]>([]);
+  const [sendingContactId, setSendingContactId] = useState<string | null>(null);
   const sharingRef = useRef(false);
   const profileSeal = useMemo(
     () => sealFromStored(profile?.sealJson ?? null),
@@ -121,6 +129,36 @@ export default function RecipeViewScreen() {
     }
   }, [recipe]);
 
+  const ensureShareId = useCallback(async (): Promise<string | null> => {
+    if (!recipe) return null;
+
+    const active = await getActiveShare(recipe.id);
+    const profileSeal = profile ? sealFromStored(profile.sealJson) : null;
+    const senderSeal = profileSeal ? sealToPayload(profileSeal) : undefined;
+
+    if (active && isValidShareId(active.share_id)) {
+      const shareId = active.share_id;
+      // Refresh the published copy so the link never serves stale text.
+      await updateShare(shareId, {
+        title: recipe.title,
+        body: recipe.body,
+        sender: profile?.displayName.trim() || ptBR.someone,
+        senderSeal,
+      });
+      return shareId;
+    }
+
+    const created = await createShare({
+      id: recipe.id,
+      title: recipe.title,
+      body: recipe.body,
+      sender: profile?.displayName.trim() || ptBR.someone,
+      senderSeal,
+    });
+    await recordShare(recipe.id, created.id);
+    return created.id;
+  }, [profile, recipe]);
+
   const shareRecipe = useCallback(async () => {
     if (!recipe || sharingRef.current) return;
 
@@ -129,43 +167,77 @@ export default function RecipeViewScreen() {
     setSnackbar(null);
 
     try {
-      const active = await getActiveShare(recipe.id);
-      const profileSeal = profile ? sealFromStored(profile.sealJson) : null;
-      const senderSeal = profileSeal ? sealToPayload(profileSeal) : undefined;
-      let shareId: string;
-
-      if (active && isValidShareId(active.share_id)) {
-        shareId = active.share_id;
-        // Refresh the published copy so the link never serves stale text.
-        await updateShare(shareId, {
-          title: recipe.title,
-          body: recipe.body,
-          sender: profile?.displayName.trim() || ptBR.someone,
-          senderSeal,
-        });
-      } else {
-        const created = await createShare({
-          id: recipe.id,
-          title: recipe.title,
-          body: recipe.body,
-          sender: profile?.displayName.trim() || ptBR.someone,
-          senderSeal,
-        });
-        await recordShare(recipe.id, created.id);
-        shareId = created.id;
-      }
+      const shareId = await ensureShareId();
+      if (!shareId) return;
 
       await Share.share({
         message: buildShareMessage(recipe.title, recipe.step_count, shareUrlFor(shareId)),
       });
     } catch (error) {
       console.warn('[recipe] share failed:', error);
-      setSnackbar({ message: ptBR.shareFailed, retry: true });
+      setSnackbar({ message: ptBR.shareFailed, retry: () => void shareRecipe() });
     } finally {
       sharingRef.current = false;
       setSharing(false);
     }
-  }, [profile, recipe]);
+  }, [ensureShareId, recipe]);
+
+  const openSendMenu = useCallback(async () => {
+    if (!recipe || sharingRef.current) return;
+
+    const rows = await listContacts().catch((error: unknown) => {
+      console.warn('[recipe] contacts load failed:', error);
+      return [];
+    });
+
+    setContacts(rows);
+    setSendSheet(rows.length === 0 ? 'no-contacts' : 'menu');
+  }, [recipe]);
+
+  const sendToContact = useCallback(
+    async (contact: ContactRow, idempotencyKey?: string) => {
+      if (!recipe || sharingRef.current) return;
+
+      sharingRef.current = true;
+      setSendingContactId(contact.id);
+      setSnackbar(null);
+
+      const key = idempotencyKey ?? `${recipe.id}:${newId()}`;
+
+      try {
+        const shareId = await ensureShareId();
+        if (!shareId) return;
+
+        const mailbox = await ensureMailbox();
+        await sendLetter({
+          address: contact.mailbox_address,
+          senderAddress: mailbox.address,
+          senderSecret: mailbox.secret,
+          shareId,
+          idempotencyKey: key,
+        });
+
+        setSendSheet('none');
+        setSnackbar({ message: ptBR.letterSent(contact.display_name) });
+      } catch (error) {
+        console.warn('[recipe] send letter failed:', error);
+        const code = isMailboxApiError(error) ? error.code : 'server_error';
+        setSnackbar({
+          message:
+            code === 'offline'
+              ? ptBR.offlineRetry
+              : code === 'mailbox_full'
+                ? ptBR.letterMailboxFull
+                : ptBR.letterSendFailed,
+          retry: () => void sendToContact(contact, key),
+        });
+      } finally {
+        sharingRef.current = false;
+        setSendingContactId(null);
+      }
+    },
+    [ensureShareId, recipe],
+  );
 
   if (!loaded) {
     return (
@@ -299,7 +371,7 @@ export default function RecipeViewScreen() {
           {
             label: sharing ? ptBR.creatingLink : ptBR.send,
             variant: 'primary',
-            onPress: () => void shareRecipe(),
+            onPress: () => void openSendMenu(),
             accessibilityLabel: ptBR.send,
             disabled: sharing,
           },
@@ -322,7 +394,7 @@ export default function RecipeViewScreen() {
           key={snackbar.message}
           actionLabel={snackbar.retry ? ptBR.retry : undefined}
           message={snackbar.message}
-          onAction={snackbar.retry ? () => void shareRecipe() : undefined}
+          onAction={snackbar.retry}
           onDismiss={() => setSnackbar(null)}
         />
       ) : null}
@@ -332,6 +404,56 @@ export default function RecipeViewScreen() {
         onDismiss={() => setMenuOpen(false)}
         title={recipe.title}
         visible={menuOpen}
+      />
+
+      <ActionSheet
+        items={
+          contacts.length === 0
+            ? [
+                {
+                  label: ptBR.noContactsAdd,
+                  onPress: () => {
+                    setSendSheet('none');
+                    router.push('/mailbox/contacts');
+                  },
+                },
+                {
+                  label: ptBR.shareLink,
+                  onPress: () => {
+                    setSendSheet('none');
+                    void shareRecipe();
+                  },
+                },
+              ]
+            : [
+                {
+                  label: ptBR.sendToContact,
+                  onPress: () => setSendSheet('contacts'),
+                },
+                {
+                  label: ptBR.shareLink,
+                  onPress: () => {
+                    setSendSheet('none');
+                    void shareRecipe();
+                  },
+                },
+              ]
+        }
+        onDismiss={() => setSendSheet('none')}
+        subtitle={contacts.length === 0 ? ptBR.noContactsBody : undefined}
+        title={contacts.length === 0 ? ptBR.noContactsTitle : ptBR.sendMenuTitle}
+        visible={sendSheet === 'menu' || sendSheet === 'no-contacts'}
+      />
+
+      <ActionSheet
+        items={contacts.map((contact) => ({
+          label: contact.display_name,
+          onPress: () => void sendToContact(contact),
+          disabled: sendingContactId === contact.id,
+        }))}
+        onDismiss={() => setSendSheet('none')}
+        title={ptBR.contactPickerTitle}
+        visible={sendSheet === 'contacts'}
       />
 
       <ConfirmDialog

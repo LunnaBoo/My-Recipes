@@ -1,19 +1,17 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { memo, useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ActionSheet, type ActionSheetItem } from '../../components/ActionSheet';
-import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { FolderTabs } from '../../components/FolderTabs';
-import { ScreenFrame } from '../../components/ScreenFrame';
-import { SectionHeader } from '../../components/SectionHeader';
-import { Snackbar } from '../../components/Snackbar';
-import { IvyWreath } from '../../components/ornaments';
-import { countTrashed, listTrashed, purgeRecipe, restoreRecipe } from '../../db/repository';
-import type { RecipeRow } from '../../db/types';
-import { ptBR } from '../../i18n/pt-BR';
-import { daysUntilExpiry } from '../../lib/trash';
-import { theme } from '../../theme';
+import { ActionSheet, type ActionSheetItem } from '../components/ActionSheet';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ScreenFrame } from '../components/ScreenFrame';
+import { Snackbar } from '../components/Snackbar';
+import { IvyWreath } from '../components/ornaments';
+import { listTrashed, purgeRecipe, restoreRecipe } from '../db/repository';
+import type { RecipeRow } from '../db/types';
+import { ptBR } from '../i18n/pt-BR';
+import { daysUntilExpiry } from '../lib/trash';
+import { theme } from '../theme';
 
 type SnackbarState = { id: number; message: string };
 
@@ -87,8 +85,8 @@ function EmptyTrash() {
 
 /** Lixeira: restore or permanently delete, with the 30-day window always visible. */
 export default function TrashScreen() {
+  const router = useRouter();
   const [items, setItems] = useState<RecipeRow[]>([]);
-  const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
   const [menuItem, setMenuItem] = useState<RecipeRow | null>(null);
@@ -104,11 +102,10 @@ export default function TrashScreen() {
     useCallback(() => {
       let cancelled = false;
 
-      Promise.all([listTrashed(), countTrashed()])
-        .then(([rows, trashed]) => {
+      listTrashed()
+        .then((rows) => {
           if (cancelled) return;
           setItems(rows);
-          setCount(trashed);
         })
         .catch((error: unknown) => {
           console.warn('[trash] load failed:', error);
@@ -203,9 +200,19 @@ export default function TrashScreen() {
   );
 
   return (
-    <ScreenFrame corners="top" tabs={<FolderTabs active="trash" trashCount={count} />}>
+    <ScreenFrame corners="top">
       <View style={styles.header}>
-        <SectionHeader title={ptBR.trashTitle} />
+        <View style={styles.backHeader}>
+          <Pressable
+            accessibilityLabel={ptBR.back}
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={({ pressed }) => [styles.backButton, pressed && styles.backPressed]}
+          >
+            <Text style={styles.backChevron}>‹</Text>
+          </Pressable>
+          <Text style={styles.headerTitle}>{ptBR.trashTitle}</Text>
+        </View>
       </View>
 
       {loading ? (
@@ -259,6 +266,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
+  },
+  backHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    backgroundColor: theme.colors.cream,
+    borderWidth: 1.5,
+    borderColor: theme.colors.tan,
+  },
+  backPressed: {
+    opacity: 0.7,
+  },
+  backChevron: {
+    ...theme.typography.recipeTitle,
+    color: theme.colors.ink,
+    fontSize: 28,
+    lineHeight: 30,
+    marginTop: -4,
+  },
+  headerTitle: {
+    ...theme.typography.sectionTitle,
+    color: theme.colors.ink,
   },
   loading: {
     flex: 1,
