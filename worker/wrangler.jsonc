@@ -18,7 +18,7 @@
     // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
     "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
     "APK_URL": "https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk",
-    "VERSION_JSON": "{\"versionCode\":4,\"versionName\":\"1.3.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105230802,\"sha256\":\"8a55ef83d1430b89fc9ef08c2628ebd104180f4bdfadb5bc496addbe6b88bdfa\",\"notes\":\"Selos de cera, icone novo e ajustes.\"}",
+    "VERSION_JSON": "{\"versionCode\":5,\"versionName\":\"1.3.1\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105230798,\"sha256\":\"1b0b1a85c8f97959eddc06d1909a63570a76bdadfa66814ca8ffb0749b1bcf41\",\"notes\":\"Selos maiores na carta e na pre-visualizacao.\"}",
     "SITE_NAME": "My Recipes"
   }
 }
