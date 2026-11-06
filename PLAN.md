@@ -65,6 +65,9 @@ Shipped across `1.3.0` and `1.4.0`; the unchecked items below move to a later bu
 - [ ] `og:image` static card for link previews.
 - [ ] Serve the APK from the Worker/R2 instead of redirecting to GitHub, if Releases ever
       becomes a constraint.
+- [ ] Script to regenerate `worker/src/seals.ts` and `worker/src/appIcon.ts` from the app art.
+- [ ] Share import: log the underlying fetch failure and add a "Copiar link" fallback on the
+      offline state.
 
 ### Themes — after v4, deliberately last
 Decided 2026-11-05: two extra themes, built only after the v3/v4 work.
@@ -97,6 +100,8 @@ These have never run on a device and need a phone pass:
 - [ ] Own-recipe cream card and home side-branch alignment at 360dp and 200% font scale.
 - [ ] Android share page: three-action bar and APK download in Chrome and WhatsApp.
 - [ ] Share-link import: one device showed "Sem conexão" while the API was healthy; capture logcat if it recurs.
+- [ ] Launcher icon under the OEM adaptive mask (art at 62% of the 1024 canvas; reduce to 60% if clipped).
+- [ ] Seal picker cells on wide screens (31% + aspect-ratio leaves a large empty tile at ≥430dp).
 - [ ] Share sheet message format in WhatsApp.
 
 ## Open questions

@@ -657,6 +657,13 @@ body {
     gap: 8px;
   }
   .btn { padding: 0 8px; }
+  .action-bar.stack .btn {
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+  .action-bar.stack .btn:not(.btn-copy) {
+    flex-basis: calc(50% - 4px);
+  }
   .page-scroll { padding-left: 16px; padding-right: 16px; }
 }
 

@@ -377,10 +377,10 @@ font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
 
 ### Seal treatment on the web
 
-- Built-in sigils are inline SVG `<symbol>`s, reused with `<use>`.
-- Custom sender photos are rendered as `<img src="data:image/...">` (base64 or SVG data URI) and clipped to a circle; the wavy wax-rim overlay is an inline SVG drawn on top so the rim never disappears into a light photo.
+- Built-in stamps are inlined WebP data URIs rendered with `object-fit: contain`; legacy sigils stay inline SVG `<symbol>`s.
+- Custom sender photos are rendered as `<img src="data:image/...">` and clipped to a circle; the wavy wax-rim overlay is an inline SVG drawn on top so the rim never disappears into a light photo.
 - The seal is always decorative; the sender name appears as text beside or below it.
-- Fallback seal: Navy disc with a simple Cream ivy sprig, identical rule to the app.
+- Fallback seal: the `cat` stamp, identical rule to the app.
 
 ### Button hierarchy for the two Android states
 

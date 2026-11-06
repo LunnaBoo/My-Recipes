@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -50,6 +50,10 @@ export default function RecipeViewScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
   const sharingRef = useRef(false);
+  const profileSeal = useMemo(
+    () => sealFromStored(profile?.sealJson ?? null),
+    [profile?.sealJson],
+  );
 
   useEffect(() => {
     if (notice === 'saved') setSnackbar({ message: ptBR.recipeSaved });
@@ -264,7 +268,7 @@ export default function RecipeViewScreen() {
             </Pressable>
 
             <View style={styles.sealWrap}>
-              <Seal size={108} seal={sealFromStored(profile?.sealJson ?? null)} />
+              <Seal size={108} seal={profileSeal} />
             </View>
 
             <Text style={styles.recipeBy}>

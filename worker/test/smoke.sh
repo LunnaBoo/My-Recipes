@@ -742,6 +742,7 @@ check_body_contains "install step points at the button below" 'no botão abaixo'
 check_body_contains "install page has numbered steps" 'class="install-steps"'
 check_body_contains "install page has the Play Protect warning" 'Mais detalhes'
 check_body_contains "install page has download link" 'href="/app/latest.apk"'
+check_body_contains "install page inlines the app icon" 'class="install-icon" src="data:image/webp'
 
 if node - "$TMP/body" <<'NODE'
 const fs = require("fs");
