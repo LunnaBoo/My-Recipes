@@ -238,32 +238,74 @@ export default function RecipeViewScreen() {
       >
         <SectionHeader title={ptBR.recipeHeader} />
 
-        <View style={styles.headerRow}>
-          <View style={styles.sender}>
-            {imported ? <Seal size={28} seal={sourceSeal} /> : null}
-            {imported && sender ? (
-              <Text style={styles.letterFrom}>{ptBR.letterFrom(sender)}</Text>
-            ) : null}
+        {imported ? (
+          <>
+            <View style={styles.headerRow}>
+              <View style={styles.sender}>
+                <Seal size={28} seal={sourceSeal} />
+                {sender ? <Text style={styles.letterFrom}>{ptBR.letterFrom(sender)}</Text> : null}
+              </View>
+
+              <Pressable
+                accessibilityLabel={ptBR.moreOptions}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={openMenu}
+                style={({ pressed }) => [styles.overflow, pressed && styles.pressed]}
+              >
+                <Text style={styles.overflowLabel}>⋯</Text>
+              </Pressable>
+            </View>
+
+            <Text numberOfLines={2} onLongPress={openMenu} style={styles.title}>
+              {recipe.title}
+            </Text>
+            <Text style={styles.meta}>{meta}</Text>
+            <View style={styles.rule} />
+
+            <Markdown markdown={recipe.body} />
+          </>
+        ) : (
+          <View style={styles.card}>
+            <Pressable
+              accessibilityLabel={ptBR.moreOptions}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={openMenu}
+              style={({ pressed }) => [
+                styles.overflow,
+                styles.cardOverflow,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.overflowLabel}>⋯</Text>
+            </Pressable>
+
+            <View style={styles.sealWrap}>
+              <Seal size={108} seal={sealFromStored(profile?.sealJson ?? null)} />
+            </View>
+
+            <Text style={styles.recipeBy}>
+              {profile?.displayName.trim()
+                ? ptBR.recipeBy(profile.displayName.trim())
+                : ptBR.yourRecipe}
+            </Text>
+
+            <Text
+              numberOfLines={2}
+              onLongPress={openMenu}
+              style={[styles.title, styles.titleCentered]}
+            >
+              {recipe.title}
+            </Text>
+            <Text style={[styles.meta, styles.metaCentered]}>
+              {ptBR.stepsLabel(recipe.step_count)}
+            </Text>
+            <View style={styles.rule} />
+
+            <Markdown markdown={recipe.body} />
           </View>
-
-          <Pressable
-            accessibilityLabel={ptBR.moreOptions}
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={openMenu}
-            style={({ pressed }) => [styles.overflow, pressed && styles.pressed]}
-          >
-            <Text style={styles.overflowLabel}>⋯</Text>
-          </Pressable>
-        </View>
-
-        <Text numberOfLines={2} onLongPress={openMenu} style={styles.title}>
-          {recipe.title}
-        </Text>
-        <Text style={styles.meta}>{meta}</Text>
-        <View style={styles.rule} />
-
-        <Markdown markdown={recipe.body} />
+        )}
       </ScrollView>
 
       <ActionBar
@@ -397,5 +439,34 @@ const styles = StyleSheet.create({
     opacity: 0.25,
     backgroundColor: theme.colors.inkLight,
     marginVertical: theme.spacing.sm,
+  },
+  card: {
+    gap: theme.spacing.xs,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.cream,
+    borderWidth: 1.5,
+    borderColor: theme.colors.tan,
+    borderRadius: theme.radii.lg,
+  },
+  cardOverflow: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+  },
+  sealWrap: {
+    alignItems: 'center',
+    paddingBottom: theme.spacing.sm,
+  },
+  recipeBy: {
+    ...theme.typography.meta,
+    color: theme.colors.inkLight,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  titleCentered: {
+    textAlign: 'center',
+  },
+  metaCentered: {
+    textAlign: 'center',
   },
 });

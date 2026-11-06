@@ -200,10 +200,24 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 ### 5.2 Recipe view
 
 - Same parchment panel and header treatment.
-- Title (clamped to 2 lines) + meta line + sender seal at top.
 - Rendered Markdown body, generous vertical rhythm.
 - Bottom action bar (sticky): **Enviar · Copiar · Editar**, styled as pill buttons.
-- Imported recipes show a small "Carta de <sender>" seal inline in the meta line.
+
+**Own recipes**
+
+- Cream/Tan card (`cream` background, `tan` 1.5dp border, `radii.lg` corners, `spacing.lg` padding and gap `xs`).
+- Large centred profile seal (108dp) built from the user's chosen seal.
+- Centred header line: `"Receita de <displayName>"` when a name is set, otherwise `"Sua receita"`.
+- Title clamped to 2 lines, centred, long-press opens the options menu.
+- Meta line centred: step count only.
+- The `⋯` overflow menu sits as an absolute top-right control inside the card (44dp touch target).
+
+**Imported recipes**
+
+- Compact header row, left-aligned.
+- Small source seal (28dp) inline before `"Carta de <sender>"`.
+- Title and meta left-aligned; meta appends `" · Importada de <sender> em <date>"` when available.
+- The `⋯` overflow menu sits at the right end of the header row.
 
 ### 5.3 Editor
 
