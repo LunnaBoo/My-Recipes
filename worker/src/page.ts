@@ -325,7 +325,7 @@ body {
   flex-shrink: 0;
   vertical-align: middle;
 }
-.seal-lg { width: 92px; height: 92px; }
+.seal-lg { width: 96px; height: 96px; }
 .seal-sm { width: 28px; height: 28px; }
 .seal-stamp {
   display: block;
@@ -533,7 +533,7 @@ body {
 }
 .install-icon {
   display: block;
-  width: clamp(160px, 46vw, 208px);
+  width: clamp(148px, 42vw, 188px);
   height: auto;
   margin: 0 auto 14px;
 }
@@ -656,7 +656,7 @@ body {
     border-radius: 22px;
   }
   .page-scroll { padding: 36px 28px 100px; }
-  .seal-lg { width: 120px; height: 120px; }
+  .seal-lg { width: 132px; height: 132px; }
   .share-seal-wrap { margin-bottom: 18px; }
 }
 
