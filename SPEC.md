@@ -295,7 +295,7 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 - Filter row: **Todas** / **Fixadas** — two segments, no tag chips.
 - Cards: title, first body line, "N passos", pin indicator; long-press → pin/edit/delete.
 - FAB opens two actions: **Nova receita** and **Colar receita**.
-- Header menu: Lixeira, Ajustes.
+- Tabs: **Receitas / Cartas / Ajustes**; Lixeira lives in Ajustes.
 - Empty state: "Nenhuma receita ainda. Cole sua primeira."
 
 ### 6.2 Recipe view
@@ -306,8 +306,9 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 - Imported recipes: compact left-aligned header with the source seal and
   "Receita de <sender>"; the meta is the step count. No import date is shown.
 - Bottom action bar: Enviar, Copiar, Editar.
-- **Compartilhar** → publish (reuse `share_id` if present) → share sheet with:
-  `GUIA: COMO PREPARAR FEIJÃO · 12 passos\nhttps://r.lunna.boo/r/f8k2m9x1q4`
+- **Enviar** → ActionSheet: **Enviar para um contato** (mailbox letter) or **Compartilhar link**
+  (publish, reuse `share_id` if present, then the share sheet with:
+  `GUIA: COMO PREPARAR FEIJÃO · 12 passos\nhttps://r.lunna.boo/r/f8k2m9x1q4`).
 - **Copiar texto** → WhatsApp-flavored text (`*bold*`, numbered lines).
 - **Excluir** → moves to trash with an "Desfazer" snackbar.
 
@@ -360,6 +361,7 @@ normalized markdown is what gets stored.
 - Needs network. Offline: "Sem conexão — tentar de novo", link kept in the retry state.
 
 ### 6.6 Trash
+- Reached from Ajustes → **Lixeira**; pushed screen with a back header and no folder tabs.
 - List of deleted recipes with "expira em N dias".
 - Restore, or delete permanently (confirm).
 - 30-day auto-purge on launch.
@@ -370,8 +372,21 @@ normalized markdown is what gets stored.
   re-encode to 256×256 JPEG). A live preview shows the seal as it will appear on shares.
 - Export backup (zip) / Import backup.
 - Check for updates → compares `version.json`, offers the APK link.
+- **Caixa de entrada** → mailbox address + contacts.
+- **Lixeira** → trash, with the deleted count.
 - App version and share-domain info.
 - No share management / revoke UI in v1.
+
+### 6.8 Cartas (mailbox)
+- Each install has a public 12-char mailbox address and a private secret; add a contact by
+  pasting their address.
+- The **Cartas** tab lists received letters (44 dp sender seal, "Carta de <name>", title,
+  steps/time, gold unread dot). Tapping opens the shared-recipe page with **Salvar /
+  Descartar**; `Descartar` returns to the mailbox.
+- Sending a recipe offers **Enviar para um contato** or **Compartilhar link**.
+- P1: the Worker stores only `{letterId, shareId, sentAt}` per letter; read state is local and
+  the sender address is not stored at rest. Push notifications are phase 2.
+- Full design and API: `MAILBOX.md`.
 
 ---
 

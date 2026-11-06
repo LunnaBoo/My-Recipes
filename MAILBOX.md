@@ -1,8 +1,7 @@
-# Mailbox — in-app recipe letters (draft spec)
+# Mailbox — in-app recipe letters
 
-Status: **proposal, not implemented.** `SPEC.md` remains the source of truth for shipped
-behaviour. This file records the agreed design; merge the behaviour into `SPEC.md` and the
-navigation into `DESIGN.md` when the feature is built.
+Status: **implemented (phase 1: P1 mailbox + Cartas UI).** Push notifications are phase 2.
+`SPEC.md` remains the source of truth for shipped behaviour; this file records the full design.
 
 ## 1. What this is
 

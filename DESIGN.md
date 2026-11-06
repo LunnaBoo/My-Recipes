@@ -98,11 +98,11 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 ### Tab bar
 
-- Folder-style tabs, each a muted but dark enough color for Cream text: Olive Tab (`Receitas`), Mauve Tab (`Lixeira`), Tan Tab (`Ajustes`).
+- Folder-style tabs, each a muted but dark enough color for Cream text: Olive Tab (`Receitas`), Mauve Tab (`Cartas`), Tan Tab (`Ajustes`).
 - **Active tab** is taller, fully opaque, and visually connected to the panel: its own background color continues down over the panel top edge via a small overlap, so there is no visible bottom edge where tab meets parchment.
 - **Inactive tabs** sit lower, are slightly recessed (lower opacity + inset shadow), and appear to tuck behind the panel surface.
-- A small shoulder badge on the far right shows trash count / settings indicator; it sits on the panel surface, not inside a tab.
-- Minimum tab hit target: 48px height, 80px width on a 360dp screen.
+- The `Cartas` tab carries the unread-letter badge inside its face. The trash count moves to the Ajustes → Lixeira row.
+- Tabs are compact and left-aligned; the remaining row space stays empty. Minimum tab hit target: 48px height, 80px width on a 360dp screen.
 
 ### List row
 
@@ -188,7 +188,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 ### 5.1 Home — recipe list
 
 - Background: Leafy Green full-bleed, with a subtle vignette and paper-grain texture overlay.
-- Top: folder tabs (Receitas / Lixeira / Ajustes).
+- Top: folder tabs (Receitas / Cartas / Ajustes).
 - Panel: Parchment, full-width with 16px margins, rough top edge.
 - Inside panel:
   - Search field (Cream, rounded, placeholder "Buscar receitas…").
@@ -250,7 +250,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 ### 5.6 Trash
 
-- Tab "Lixeira" folder is Mauve Tab.
+- Pushed screen from Ajustes → Lixeira; back header "Lixeira", no folder tabs.
 - List shows deleted recipes with "expira em N dias" in Meta style.
 - Swipe actions (or long-press menu): Restaurar / Apagar para sempre.
 - Empty trash: disabled state when empty.
@@ -260,7 +260,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 - Tab "Ajustes" folder is Tan Tab.
 - Grouped list on parchment, section headers in uppercase serif.
-- Fields: Nome de exibição, Seu selo, Exportar backup, Importar backup, Verificar atualização.
+- Fields: Nome de exibição, Seu selo, Caixa de entrada, Lixeira (with count), Exportar backup, Importar backup, Verificar atualização.
 - Version info at bottom in Meta style.
 
 ### 5.8 Seu selo
@@ -273,6 +273,13 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
   - Selectable 3×2 grid of the six built-in stamps on square parchment cells; the selected cell uses Cream and a Gold border.
   - "Enviar imagem" option with a circular photo preview inside the wax rim.
   - Save / Cancel actions.
+
+### 5.9 Cartas
+
+- Tab "Cartas" folder is Mauve Tab, with an unread badge.
+- Inbox rows: 44 dp sender seal, "Carta de <name>", title, steps/time, gold unread dot.
+- Empty: "Nenhuma carta ainda."
+- Tapping opens the shared-recipe page; long-press marks read/unread or removes.
 
 ## 6. React Native implementation notes
 

@@ -72,6 +72,9 @@ gestures) can only be verified on a phone.
   `git config core.hooksPath scripts/git-hooks`.
 - GitHub secret scanning + push protection are enabled on the repo.
 - Share links are unlisted, not private: anyone with the URL can read the recipe.
+- Mailbox (1.5.0): each install has an unguessable address + secret. The Worker stores only
+  `{letterId, shareId, sentAt}` per letter (P1); read state stays on the phone and the sender
+  address is not stored at rest. The secret is stored hashed.
 
 ## Conventions
 

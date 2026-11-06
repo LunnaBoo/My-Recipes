@@ -29,6 +29,18 @@ Last updated: 2026-11-06
 - Public at `github.com/LunnaBoo/My-Recipes`. Secret scanning + push protection enabled.
 - `scripts/preflight.sh` runs on pre-push via `core.hooksPath`.
 
+## In progress — 1.5.0 mailbox
+
+- [x] P1 server mailbox: per-mailbox DO, create/profile/list/send/remove/push-token routes;
+      212 smoke assertions.
+- [x] App data: mailbox/contacts/letters schema, API client, backup identity + read state;
+      119 tests.
+- [x] UI: Cartas tab, three compact left-aligned tabs, Lixeira in Ajustes, Trash pushed,
+      44 dp seals.
+- [ ] Push notifications (phase 2).
+- [ ] Worker deploy: blocked on the Cloudflare workers.dev subdomain (10063).
+- [ ] EAS preview build 1.5.0 / versionCode 7: running.
+
 ## Releases
 
 ### v2 — shipped (versionCode 2)
