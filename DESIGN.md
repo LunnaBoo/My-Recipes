@@ -216,8 +216,8 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 **Imported recipes**
 
 - Compact header row, left-aligned.
-- Small source seal (28dp) inline before `"Carta de <sender>"`.
-- Title and meta left-aligned; meta appends `" · Importada de <sender> em <date>"` when available.
+- Small source seal (28dp) inline before `"Receita de <sender>"`.
+- Title and meta left-aligned; meta is the step count.
 - The `⋯` overflow menu sits at the right end of the header row.
 
 ### 5.3 Editor

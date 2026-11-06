@@ -171,7 +171,6 @@ export const ptBR = {
   recipeBy: (name: string) => `Receita de ${name}`,
   yourRecipe: 'Sua receita',
   letterFrom: (name: string) => `Carta de ${name}`,
-  importedFrom: (name: string, date: string) => `Importada de ${name} em ${date}`,
   pinnedLabel: 'Fixada',
   listItemHint: 'Toque e segure para mais opções.',
   listItemAccessibility: (title: string, count: number, pinned: boolean) =>

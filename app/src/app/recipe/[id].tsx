@@ -39,14 +39,6 @@ type SnackbarState = {
   retry?: boolean;
 };
 
-function formatDate(timestamp: number | null): string {
-  if (!timestamp) return '';
-  const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${day}/${month}/${date.getFullYear()}`;
-}
-
 export default function RecipeViewScreen() {
   const { id, notice } = useLocalSearchParams<{ id: string; notice?: string }>();
   const router = useRouter();
@@ -199,17 +191,7 @@ export default function RecipeViewScreen() {
     recipe.source_name !== null ||
     recipe.imported_at !== null;
   const sender = recipe.source_name;
-  const importedDate = formatDate(recipe.imported_at);
   const sourceSeal = imported ? sealFromStored(recipe.source_seal) : null;
-
-  let meta = ptBR.stepsLabel(recipe.step_count);
-  if (imported && sender) {
-    meta = importedDate
-      ? `${meta} · ${ptBR.importedFrom(sender, importedDate)}`
-      : meta;
-  } else if (profile?.displayName) {
-    meta = ptBR.stepsBy(recipe.step_count, profile.displayName);
-  }
 
   const menuItems: ActionSheetItem[] = [
     {
@@ -243,7 +225,7 @@ export default function RecipeViewScreen() {
             <View style={styles.headerRow}>
               <View style={styles.sender}>
                 <Seal size={28} seal={sourceSeal} />
-                {sender ? <Text style={styles.letterFrom}>{ptBR.letterFrom(sender)}</Text> : null}
+                {sender ? <Text style={styles.letterFrom}>{ptBR.recipeBy(sender)}</Text> : null}
               </View>
 
               <Pressable
@@ -260,7 +242,7 @@ export default function RecipeViewScreen() {
             <Text numberOfLines={2} onLongPress={openMenu} style={styles.title}>
               {recipe.title}
             </Text>
-            <Text style={styles.meta}>{meta}</Text>
+            <Text style={styles.meta}>{ptBR.stepsLabel(recipe.step_count)}</Text>
             <View style={styles.rule} />
 
             <Markdown markdown={recipe.body} />
