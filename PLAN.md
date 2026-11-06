@@ -10,7 +10,7 @@ Last updated: 2026-11-06
 **Infrastructure**
 - Worker on `r.lunna.boo`: `POST/GET/PUT/DELETE /api/recipes/:id`, `/r/:id` share page,
   `/` install page, `/.well-known/assetlinks.json`, `/app/latest.apk`, `/app/version.json`,
-  `/assets/page.js`, `robots.txt`. 111 smoke assertions passing.
+  `/assets/page.js`, `robots.txt`. 147 smoke assertions passing.
 - KV storage, HTTPS-only redirect, rate caps in code, real keystore fingerprint published.
 - Domain confirmed on Cloudflare Registrar (auto-renew, expires 2027-05-07).
 
@@ -55,7 +55,7 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — `b71e5dd`.
 
 ### v4 — polish (versionCode 4)
-Shipped 2026-11-06 as `1.3.0`; the unchecked items below move to a later build.
+Shipped across `1.3.0` and `1.4.0`; the unchecked items below move to a later build.
 - [x] Custom launcher icon: black line-art on parchment, adaptive foreground + monochrome layer.
 - [ ] Splash still uses the Expo template art.
 - [x] Six bundled photographic wax stamps replacing the line-art sigils (WebP, alpha, real
@@ -80,7 +80,7 @@ Decision: **the launcher icon never changes.** One icon, one identity. Theme aff
 in-app look only — no `activity-alias` icon switching, no app restart on theme change.
 
 ### v3 progress notes
-- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 142 smoke assertions.
+- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 147 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
 - All v3 features are implemented and released as 1.2.0 (versionCode 3) on 2026-11-05.
 
@@ -91,9 +91,12 @@ These have never run on a device and need a phone pass:
 - [ ] App Links: does `https://r.lunna.boo/r/<id>` open the app? If not, does the page's
       "Abrir no app" work?
 - [ ] Updater: download progress, installer handoff, "install unknown apps" recovery.
-- [ ] Parchment layout at 360dp and at 200% font scale, including the new 42px panel inset.
+- [ ] Parchment layout at 360dp and 200% font scale, including the 42dp corner-ivy inset and the 16dp home side-ivy band.
 - [ ] ActionSheet/ConfirmDialog stacking and dismissal.
-- [ ] Seal stamps: picker grid, 28/56/96 dp silhouettes, and WebP bundling on a real device.
+- [ ] Seal stamps: picker grid, 28/56/108/110 dp silhouettes, and WebP bundling on a real device.
+- [ ] Own-recipe cream card and home side-branch alignment at 360dp and 200% font scale.
+- [ ] Android share page: three-action bar and APK download in Chrome and WhatsApp.
+- [ ] Share-link import: one device showed "Sem conexão" while the API was healthy; capture logcat if it recurs.
 - [ ] Share sheet message format in WhatsApp.
 
 ## Open questions

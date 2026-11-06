@@ -4,7 +4,7 @@ A private, two-person recipe notebook for Android: markdown notes, local-first, 
 recipe as a short link that opens the app on the other phone with **Salvar / Descartar** —
 or, if the app isn't installed, shows the recipe as a normal web page.
 
-Status: shipping (v1.2.0). This document remains the source of truth for behaviour;
+Status: shipping (v1.4.0). This document remains the source of truth for behaviour;
 `PLAN.md` tracks what is built and what comes next.
 
 Locked decisions:
@@ -298,10 +298,14 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 
 ### 6.2 Recipe view
 - Rendered markdown, scrollable, generous type (this is read while cooking).
-- Top bar: Editar, Compartilhar, Copiar texto, Mais (pin, excluir).
-- Imported copies show: "Importada de <sender> em <date>".
+- Own recipes: cream/tan card with the profile seal, centred "Receita de <name>" (or
+  "Sua receita"), centred title and step count, then the body. A `⋯` menu at the card's
+  top-right holds pin/delete.
+- Imported recipes: compact left-aligned header with the source seal and
+  "Receita de <sender>"; the meta is the step count. No import date is shown.
+- Bottom action bar: Enviar, Copiar, Editar.
 - **Compartilhar** → publish (reuse `share_id` if present) → share sheet with:
-  `GUIA: COMO PREPARAR FEIJÃO · 12 passos\nhttps://r.lunna.boo/f8k2m9x1q4`
+  `GUIA: COMO PREPARAR FEIJÃO · 12 passos\nhttps://r.lunna.boo/r/f8k2m9x1q4`
 - **Copiar texto** → WhatsApp-flavored text (`*bold*`, numbered lines).
 - **Excluir** → moves to trash with an "Desfazer" snackbar.
 

@@ -167,7 +167,6 @@ export const ptBR = {
   stepsLabel: stepLabel,
   trashCount: (count: number) =>
     count === 1 ? '1 receita na lixeira' : `${count} receitas na lixeira`,
-  stepsBy: (count: number, name: string) => `${stepLabel(count)} · por ${name}`,
   recipeBy: (name: string) => `Receita de ${name}`,
   yourRecipe: 'Sua receita',
   letterFrom: (name: string) => `Carta de ${name}`,

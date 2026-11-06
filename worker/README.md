@@ -150,8 +150,13 @@ src/index.ts      fetch router, API, headers, routes
 src/page.ts       share page, install page, error page, inline CSS
 src/markdown.ts   safe markdown -> HTML and WhatsApp-flavored copy text
 src/util.ts       ids, escaping, validation, step counting
+src/seals.ts      generated seal WebP data URIs (app/assets/seals/*.webp)
+src/appIcon.ts    generated install-hero icon data URI
 test/smoke.sh     local end-to-end test
 ```
+
+`seals.ts` and `appIcon.ts` are generated modules. Rebuild them from the app
+art whenever the stamps or launcher icon change; do not hand-edit the base64.
 
 ## Security notes
 

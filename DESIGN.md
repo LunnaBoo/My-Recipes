@@ -120,16 +120,15 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 ### Recipe header
 
 - Centered uppercase serif title "RECEITA" flanked by inline SVG leaf/berry flourishes and a thin rule.
-- Below: recipe title in large Cormorant Garamond, left-aligned, clamped to 2 lines.
-- Meta line: `"12 passos · por Lucas"` for own recipes, or `"Carta de Lucas · 12 passos"` for imported recipes.
-- For imported recipes, a small sender seal (28px) sits inline before the "Carta de ..." meta text.
+- Own recipes: see §5.2 — cream card, centred header, profile seal.
+- Imported recipes: left-aligned title and step count, with a 28px source seal inline before `"Receita de <sender>"`.
 
 ### Seal
 
 - A decorative wax identity for each sender. It is **never load-bearing for meaning**: the sender name is always shown as text, and the seal is an ornament that makes shared recipes feel personal.
 - **Sizes:**
   - **Large (108px):** import-preview letter, centered above `"Receita de <sender>"`.
-  - **Small (28px):** recipe-view meta line, settings row, inline before `"Carta de <sender>"`.
+  - **Small (28px):** imported-recipe header, settings row, inline before `"Receita de <sender>"`.
   - **Grid (56px):** the six built-in stamps in the "Seu selo" picker.
   - **Preview (110px):** top-of-screen seal preview on "Seu selo".
 - **Built-in stamps:** six photographs of real wax seals, cut out to alpha and bundled as WebP. They render at their photographed silhouette inside a transparent square (`contain`) — **no circular crop, no navy disc, no rim**. IDs, in picker order: `bee`, `cat`, `leaf`, `moon`, `mushroom`, `sea`.
@@ -137,6 +136,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - **Custom-image seal:** unchanged. The user picks a photo; it is cropped to a circle and rendered *under* a Navy rim so it stays readable as a seal.
 - **Legacy sigils:** `sun`, `star`, and `owl` keep the old Cream-on-Navy line-art rendering so recipes saved before the stamp art don't change. They are not offered in the picker.
 - **Fallback:** when no seal is set, show the `cat` stamp. The sender name remains visible as text.
+- **Web sizes:** 96px on mobile and 132px at `min-width:600px` on share pages; the install hero uses the app icon at `clamp(148px, 42vw, 188px)`.
 
 ### Step list
 
@@ -200,7 +200,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 ### 5.2 Recipe view
 
-- Same parchment panel and header treatment.
+- Same outer parchment panel; the content treatment differs by origin (below).
 - Rendered Markdown body, generous vertical rhythm.
 - Bottom action bar (sticky): **Enviar · Copiar · Editar**, styled as pill buttons.
 
