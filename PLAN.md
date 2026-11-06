@@ -112,3 +112,4 @@ These have never run on a device and need a phone pass:
 | 1.2.0 | 3 | 2026-11-05 | Seals, backup/import, trash, editor toolbar + preview, UI fixes. |
 | 1.3.0 | 4 | 2026-11-06 | Wax stamp seals, custom launcher icon. |
 | 1.3.1 | 5 | 2026-11-06 | Larger share-letter seal and Settings preview. |
+| 1.4.0 | 6 | 2026-11-06 | Own-recipe card, home side branches, imported-recipe copy cleanup. |
