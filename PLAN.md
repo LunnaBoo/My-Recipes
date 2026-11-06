@@ -55,7 +55,7 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — `b71e5dd`.
 
 ### v4 — polish (versionCode 4)
-Released 2026-11-06 as `1.3.0`.
+Shipped 2026-11-06 as `1.3.0`; the unchecked items below move to a later build.
 - [x] Custom launcher icon: black line-art on parchment, adaptive foreground + monochrome layer.
 - [ ] Splash still uses the Expo template art.
 - [x] Six bundled photographic wax stamps replacing the line-art sigils (WebP, alpha, real
