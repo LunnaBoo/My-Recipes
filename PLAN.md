@@ -10,7 +10,7 @@ Last updated: 2026-11-06
 **Infrastructure**
 - Worker on `r.lunna.boo`: `POST/GET/PUT/DELETE /api/recipes/:id`, `/r/:id` share page,
   `/` install page, `/.well-known/assetlinks.json`, `/app/latest.apk`, `/app/version.json`,
-  `/assets/page.js`, `robots.txt`. 147 smoke assertions passing.
+  `/assets/page.js`, `robots.txt`. 148 smoke assertions passing.
 - KV storage, HTTPS-only redirect, rate caps in code, real keystore fingerprint published.
 - Domain confirmed on Cloudflare Registrar (auto-renew, expires 2027-05-07).
 
@@ -83,7 +83,7 @@ Decision: **the launcher icon never changes.** One icon, one identity. Theme aff
 in-app look only — no `activity-alias` icon switching, no app restart on theme change.
 
 ### v3 progress notes
-- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 147 smoke assertions.
+- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 148 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
 - All v3 features are implemented and released as 1.2.0 (versionCode 3) on 2026-11-05.
 

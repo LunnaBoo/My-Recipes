@@ -29,7 +29,7 @@ cd app && npx expo config --type public
 
 # worker
 cd worker && npm run check
-cd worker && npm run smoke   # starts local wrangler dev, 147 assertions
+cd worker && npm run smoke   # starts local wrangler dev, 148 assertions
 cd worker && npx wrangler deploy
 
 # release
