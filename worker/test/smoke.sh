@@ -193,8 +193,8 @@ if command -v setsid >/dev/null 2>&1; then
     --ip 127.0.0.1 \
     --persist-to "$STATE" \
     --var ASSETLINKS_JSON:[] \
-    --var APK_URL: \
-    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"","notes":""} \
+    --var APK_URL:https://example.com/myrecipes.apk \
+    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"https://example.com/myrecipes.apk","notes":""} \
     >"$LOG" 2>&1 &
 else
   CI=1 WRANGLER_SEND_METRICS=false npx --no-install wrangler dev \
@@ -202,8 +202,8 @@ else
     --ip 127.0.0.1 \
     --persist-to "$STATE" \
     --var ASSETLINKS_JSON:[] \
-    --var APK_URL: \
-    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"","notes":""} \
+    --var APK_URL:https://example.com/myrecipes.apk \
+    --var VERSION_JSON:{"versionCode":1,"versionName":"1.0.0","url":"https://example.com/myrecipes.apk","notes":""} \
     >"$LOG" 2>&1 &
 fi
 SERVER_PID=$!
@@ -394,7 +394,8 @@ check_body_contains "og:description mentions sender" 'por Lucas'
 check_body_contains "title element present" '<title>GUIA: COMO PREPARAR FEIJÃO</title>'
 check_body_contains "canonical og:url present" "content=\"$ORIGIN/r/$ID\""
 check_body_not_contains "no automatic meta refresh" 'http-equiv="refresh"'
-check_body_not_contains "no APK link while APK_URL is unset" '/app/latest.apk'
+check_body_contains "non-Android share page has download link" '/app/latest.apk'
+check_body_contains "non-Android share page has download label" 'Baixar o app</a>'
 check_body_contains "copy button present" 'data-copy='
 check_body_contains "parchment action bar present" 'class="action-bar"'
 check_body_contains "share primary label is Copiar receita" 'Copiar receita</button>'
@@ -450,6 +451,8 @@ check_body_contains "Android action bar uses the intent URL" 'intent://'
 check_body_contains "Android intent targets the app package" 'package=com.lunnaboo.myrecipes'
 check_body_contains "Android intent keeps the https fallback" 'browser_fallback_url='
 check_body_contains "Android copy action is still present" 'Copiar receita</button>'
+check_body_contains "Android download link points to APK" '/app/latest.apk'
+check_body_contains "Android download label is Baixar o app" 'Baixar o app</a>'
 
 echo
 echo "== Sender seals =="
@@ -738,6 +741,7 @@ check_body_not_contains "QR placeholder is gone" 'QR code em breve'
 check_body_contains "install step points at the button below" 'no botão abaixo'
 check_body_contains "install page has numbered steps" 'class="install-steps"'
 check_body_contains "install page has the Play Protect warning" 'Mais detalhes'
+check_body_contains "install page has download link" 'href="/app/latest.apk"'
 
 if node - "$TMP/body" <<'NODE'
 const fs = require("fs");
@@ -765,7 +769,8 @@ check_status "version.json -> 200" 200
 check_eq "version.json versionName" "1.0.0" "$(json_get versionName)"
 
 STATUS="$(request GET "$BASE/app/latest.apk")"
-check_status "APK without APK_URL -> 404" 404
+check_status "APK with APK_URL -> 302" 302
+check_header_contains "APK redirect location" 'location' 'https://example.com/myrecipes.apk'
 
 STATUS="$(request GET "$BASE/robots.txt")"
 check_status "robots.txt -> 200" 200

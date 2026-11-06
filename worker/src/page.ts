@@ -487,6 +487,18 @@ body {
   z-index: 3;
 }
 .action-bar.single { flex-direction: column; }
+.action-bar.stack {
+  flex-wrap: wrap;
+}
+.action-bar.stack .btn {
+  flex: 1 1 calc(50% - 5px);
+}
+.action-bar.stack .btn-copy {
+  flex-basis: 100%;
+}
+.page-scroll.stack-actions {
+  padding-bottom: 150px;
+}
 .btn {
   flex: 1 1 0;
   min-width: 0;
@@ -692,8 +704,15 @@ ${body}
 </html>`;
 }
 
-function copyButton(copyText: string, variant: "primary" | "secondary"): string {
-  return `<button class="btn btn-${variant}" type="button" id="copy" data-copy="${escapeAttr(
+function copyButton(
+  copyText: string,
+  variant: "primary" | "secondary",
+  extraClass?: string,
+): string {
+  const className = extraClass
+    ? `btn btn-${variant} ${extraClass}`
+    : `btn btn-${variant}`;
+  return `<button class="${className}" type="button" id="copy" data-copy="${escapeAttr(
     copyText,
   )}">Copiar receita</button>`;
 }
@@ -729,12 +748,21 @@ export function renderSharePage(
     : "Receita compartilhada";
 
   let actionBar: string;
+  let scrollClass = "page-scroll";
   if (options.android) {
-    actionBar = `<div class="action-bar">
+    const download = options.apkAvailable
+      ? `<a class="btn btn-secondary" href="/app/latest.apk" role="button">Baixar o app</a>`
+      : "";
+    const stackClass = options.apkAvailable ? "action-bar stack" : "action-bar";
+    if (options.apkAvailable) {
+      scrollClass = "page-scroll stack-actions";
+    }
+    actionBar = `<div class="${stackClass}">
 <a class="btn btn-primary" href="${escapeAttr(
       intentUrl,
     )}" role="button">Abrir no app</a>
-${copyButton(copyText, "secondary")}
+${download}
+${copyButton(copyText, "secondary", options.apkAvailable ? "btn-copy" : undefined)}
 </div>`;
   } else {
     const download = options.apkAvailable
@@ -750,7 +778,7 @@ ${download}
 ${ivyCorner("tl")}
 ${ivyCorner("br")}
 <main class="page-content">
-<div class="page-scroll">
+<div class="${scrollClass}">
 ${sectionHeader("Receita")}
 <div class="share-seal-wrap">${renderSeal(recipe.senderSeal, "lg")}</div>
 <div class="share-from">${fromLine}</div>
