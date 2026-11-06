@@ -3,7 +3,7 @@
 Remaining work and release order. `SPEC.md` defines behaviour; this file tracks what is
 actually built and what comes next.
 
-Last updated: 2026-11-05
+Last updated: 2026-11-06
 
 ## Shipped
 
@@ -55,6 +55,7 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — `b71e5dd`.
 
 ### v4 — polish (versionCode 4)
+Released 2026-11-06 as `1.3.0`.
 - [x] Custom launcher icon: black line-art on parchment, adaptive foreground + monochrome layer.
 - [ ] Splash still uses the Expo template art.
 - [x] Six bundled photographic wax stamps replacing the line-art sigils (WebP, alpha, real
@@ -109,3 +110,4 @@ These have never run on a device and need a phone pass:
 | 1.0.0 | 1 | 2026-11-04 | First APK: local recipes, sharing, import letter. |
 | 1.1.0 | 2 | 2026-11-05 | Parchment menus/dialogs, dedupe fix, re-publish, updater. |
 | 1.2.0 | 3 | 2026-11-05 | Seals, backup/import, trash, editor toolbar + preview, UI fixes. |
+| 1.3.0 | 4 | 2026-11-06 | Wax stamp seals, custom launcher icon. |
