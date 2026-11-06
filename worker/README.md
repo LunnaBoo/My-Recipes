@@ -33,7 +33,8 @@ npm run smoke
 
 `npm run smoke` starts its own `wrangler dev` on `127.0.0.1:8787`, waits for it
 to be ready, runs the HTTP assertions, prints a PASS/FAIL summary, and always
-kills the server on exit. It expects `APK_URL` to be empty (the default).
+kills the server on exit. It supplies a placeholder `APK_URL` and
+`VERSION_JSON.url` so the download paths are exercised end to end.
 
 ## API quick reference
 
@@ -97,8 +98,8 @@ hours.
    - `ASSETLINKS_JSON` — the real Digital Asset Links array, as a single-line
      JSON string. It must include the SHA-256 fingerprint of the release
      keystore and package `com.lunnaboo.myrecipes`.
-   - `APK_URL` — absolute HTTPS URL of the current APK. Leave empty until the
-     first build is uploaded; `/app/latest.apk` then returns 404.
+   - `APK_URL` — absolute HTTPS URL of the current APK. `/app/latest.apk`
+     redirects there with a 302. If it is empty, the endpoint returns 404.
    - `VERSION_JSON` — `{"versionCode":1,"versionName":"1.0.0","url":"...","notes":""}`
    - `SITE_NAME` — display name, normally `My Recipes`.
 
