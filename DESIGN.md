@@ -7,7 +7,7 @@ A cozy, quest-journal notebook for two people in a kitchen. The UI reads like an
 | Role | Hex | Usage |
 |------|-----|-------|
 | Parchment | `#E8D9B8` | Main panel background, cards, list surface. |
-| Cream | `#F0E6CF` | Highlights, input fields, tab faces, empty-state panel, seal foreground. |
+| Cream | `#F0E6CF` | Highlights, input fields, tab faces, empty-state panel, legacy sigil art. |
 | Ink | `#3A2A1A` | Body text, primary icons, rules. |
 | Ink Light | `#6B5344` | Meta text, placeholders, disabled states. |
 | Sage | `#8A9A5B` | Secondary accent, decorative flourishes (ivy leaves, star fill). |
@@ -18,10 +18,10 @@ A cozy, quest-journal notebook for two people in a kitchen. The UI reads like an
 | Mauve Tab | `#5F435F` | Tab 2 (Lixeira) (Cream text). |
 | Tan | `#C4A87A` | Borders, warm neutral accents. |
 | Tan Tab | `#7A5F3A` | Tab 3 (Ajustes) (Cream text). |
-| Gold | `#D4A94A` | Pinned sparkle, accent stars, primary CTA highlights, selected seal ring. |
+| Gold | `#D4A94A` | Pinned sparkle, accent stars, primary CTA highlights, selected seal cell border. |
 | Leafy Green | `#243320` | App background, behind parchment. |
 | Leafy Deep | `#1A2616` | Background vignette, status bar area. |
-| Navy | `#2F3B52` | Wax-seal disc, deep item tiles (reference carry-over). |
+| Navy | `#2F3B52` | Photo-seal disc, legacy sigil disc, deep item tiles. |
 | Navy Dark | `#202B40` | Wax-seal rim overlay. |
 | Maroon | `#6E2F3F` | Destructive actions, trash badge, discard button. |
 
@@ -35,7 +35,7 @@ A cozy, quest-journal notebook for two people in a kitchen. The UI reads like an
 | Cream `#F0E6CF` on Olive Tab `#4A5A28` | 6.1:1 | ✅ Tab 1 label / primary button |
 | Cream `#F0E6CF` on Mauve Tab `#5F435F` | 6.9:1 | ✅ Tab 2 label |
 | Cream `#F0E6CF` on Tan Tab `#7A5F3A` | 4.8:1 | ✅ Tab 3 label |
-| Cream `#F0E6CF` on Navy `#2F3B52` | 12.5:1 | ✅ Seal sigil/photo foreground |
+| Cream `#F0E6CF` on Navy `#2F3B52` | 12.5:1 | ✅ Legacy sigil / photo-seal foreground |
 | Maroon `#6E2F3F` on Parchment `#E8D9B8` | 7.0:1 | ✅ Destructive text button |
 | Gold `#D4A94A` on Parchment `#E8D9B8` | 1.6:1 | Decorative only; sparkle has an Ink stroke. |
 
@@ -122,20 +122,21 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - Centered uppercase serif title "RECEITA" flanked by inline SVG leaf/berry flourishes and a thin rule.
 - Below: recipe title in large Cormorant Garamond, left-aligned, clamped to 2 lines.
 - Meta line: `"12 passos · por Lucas"` for own recipes, or `"Carta de Lucas · 12 passos"` for imported recipes.
-- For imported recipes, a small sender seal (30px) sits inline before the "Carta de ..." meta text.
+- For imported recipes, a small sender seal (28px) sits inline before the "Carta de ..." meta text.
 
 ### Seal
 
-- A decorative wax-seal identity for each sender. It is **never load-bearing for meaning**: the sender name is always shown as text, and the seal is an ornament that makes shared recipes feel personal.
+- A decorative wax identity for each sender. It is **never load-bearing for meaning**: the sender name is always shown as text, and the seal is an ornament that makes shared recipes feel personal.
 - **Sizes:**
   - **Large (80px):** import-preview letter, centered above `"Receita de <sender>"`.
-  - **Small (30px):** recipe-view meta line, inline before `"Carta de <sender>"`.
-  - **Grid (56px):** the six built-in sigils in the "Seu selo" picker.
+  - **Small (28px):** recipe-view meta line, settings row, inline before `"Carta de <sender>"`.
+  - **Grid (56px):** the six built-in stamps in the "Seu selo" picker.
   - **Preview (96px):** top-of-screen seal preview on "Seu selo".
-- **Built-in sigils:** six line-art icons in Cream on a Navy disc, same stroke weight and hand-drawn feel as the ivy flourishes. IDs: `cat`, `moon`, `sun`, `star`, `mushroom`, `owl`.
-- **Custom-image seal:** the user picks a photo; it is cropped to a circle and rendered *under* the wax rim so the rim never disappears. The photo replaces the Navy disc, but the rim overlay keeps it readable as a seal.
-- **Wax-rim overlay:** a wavy circular SVG ring (`Navy Dark` `#202B40`) drawn on top of the seal content. The content below is clipped to a circle so nothing bleeds past the wax edge.
-- **Fallback:** when no seal is set, show a simple Cream ivy sprig on the Navy disc. The sender name remains visible as text.
+- **Built-in stamps:** six photographs of real wax seals, cut out to alpha and bundled as WebP. They render at their photographed silhouette inside a transparent square (`contain`) — **no circular crop, no navy disc, no rim**. IDs, in picker order: `bee`, `cat`, `leaf`, `moon`, `mushroom`, `sea`.
+- **Picker cell:** a square tile with `radii.lg` corners on Parchment; the selected tile switches to Cream with a Gold border. The cells stay uniform even though the silhouettes vary.
+- **Custom-image seal:** unchanged. The user picks a photo; it is cropped to a circle and rendered *under* a Navy rim so it stays readable as a seal.
+- **Legacy sigils:** `sun`, `star`, and `owl` keep the old Cream-on-Navy line-art rendering so recipes saved before the stamp art don't change. They are not offered in the picker.
+- **Fallback:** when no seal is set, show the `cat` stamp. The sender name remains visible as text.
 
 ### Step list
 
@@ -254,7 +255,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - Panel shows:
   - Large seal preview at top (reflects current choice).
   - "Nome de exibição" text field.
-  - Selectable 3×2 grid of the six built-in sigils.
+  - Selectable 3×2 grid of the six built-in stamps on square parchment cells; the selected cell uses Cream and a Gold border.
   - "Enviar imagem" option with a circular photo preview inside the wax rim.
   - Save / Cancel actions.
 
@@ -268,18 +269,20 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 ### Ornaments
 
-- Use `react-native-svg` for all flourishes: ivy corners, tab shapes, torn panel edges, sparkle, wax seal, sigils.
+- Use `react-native-svg` for all flourishes: ivy corners, tab shapes, torn panel edges, sparkle, and the legacy seal sigils. Stamps are bundled WebP images.
 - Keep paths simple; prefer `<Path>` over complex filters.
 - Tab shape: a single SVG path behind each tab label, colored per tab.
 - Panel edge: one SVG overlay at the top and bottom of the main panel, not a full background image.
 
 ### Seal implementation constraints
 
-- **Sigils:** bundle the six sigils as local SVG components (`cat`, `moon`, `sun`, `star`, `mushroom`, `owl`). Do not fetch them from the network.
+- **Stamps:** bundle the six stamp WebP files as local assets (`bee`, `cat`, `leaf`, `moon`, `mushroom`, `sea`). Render them with `resizeMode="contain"` in a transparent square; never clip or fetch them from the network.
+- **Legacy sigils:** keep the old SVG line-art components for `sun`, `star`, `owl` so recipes saved before the stamps don't change. They are not selectable.
+- **Picker cells:** square tiles with `radii.lg` corners; Parchment by default, Cream with a Gold border when selected.
 - **Custom image:** accept a square image from the photo picker, downscale and compress it to a 256×256 JPEG under 32 KB, and store it locally.
-- **Circular crop:** clip the image to a circle. In RN, use a rounded `<View>` with `overflow: 'hidden'` or an SVG `<ClipPath>`.
-- **Wax-rim overlay:** draw the wavy rim SVG **on top of** the image, never behind it. The rim must remain visible even if the photo is light or busy.
-- **Fallback:** if the user has not set a seal, render the Navy disc with a simple Cream ivy sprig; do not leave an empty circle.
+- **Circular crop:** applies only to custom images. Clip with a rounded `<View>` + `overflow: 'hidden'` or an SVG `<ClipPath>`; stamps are never clipped.
+- **Wax-rim overlay:** custom images only. Draw the wavy rim SVG **on top of** the photo, never behind it, so it stays visible even on a light or busy image.
+- **Fallback:** if the user has not set a seal, render the `cat` stamp; do not leave an empty slot.
 - **Accessibility:** the seal is decorative; screen readers should ignore it and read the sender name as text.
 
 ### Texture

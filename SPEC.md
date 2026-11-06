@@ -4,17 +4,20 @@ A private, two-person recipe notebook for Android: markdown notes, local-first, 
 recipe as a short link that opens the app on the other phone with **Salvar / Descartar** —
 or, if the app isn't installed, shows the recipe as a normal web page.
 
-Status: draft, pre-implementation.
+Status: shipping (v1.2.0). This document remains the source of truth for behaviour;
+`PLAN.md` tracks what is built and what comes next.
 
 Locked decisions:
 - Android-only APK (sideload), no Play Store, no iOS.
 - One-way sharing: sender → recipient, recipient gets an independent copy.
 - Short links backed by a single Cloudflare Worker; text-only recipes.
-- No photos, ever, in v1 or after (deliberate: keeps links short and the app small).
+- No recipe photos, ever, in v1 or after (deliberate: keeps links short and the app small).
+  Sender seal photos are the only image, and they are capped at 32 KB.
 - **No tags in v1.** No chip row, no tag field, no tag payload. Search, pinned, and recents
   carry organization at this scale; tags can return later as an additive field.
-- **Sender seals:** each person picks one of six built-in ink sigils (cat, moon, sun, star,
-  mushroom, owl) or uploads a photo. The seal travels with every recipe they share.
+- **Sender seals:** each person picks one of six bundled wax stamps (bee, cat, leaf, moon,
+  mushroom, sea) or uploads a photo. The seal travels with every recipe they share. The old
+  line-art ids (sun, star, owl) stay readable so existing recipes don't change.
 - No revocation UI in v1; revoke via `curl`/`wrangler` if ever needed.
 - Share preview card: title = recipe name, subtitle = "N passos".
 - App name: **My Recipes**. UI language: **Português (pt-BR)**.
@@ -40,7 +43,8 @@ Locked decisions:
 
 ### v1 non-goals
 - No accounts, no login screen, no sync, no collaborative editing.
-- No photos or image attachments (any version).
+- No recipe photos or image attachments (any version). Sender seal photos are the one
+  exception and are capped at 32 KB.
 - No Play Store, no iOS, no web app for editing.
 - No collections/folders, no meal planning, no shopping list.
 - No tags, no tag chips, no tag filter.
@@ -201,17 +205,21 @@ inside the share payload:
 { "kind": "image", "mime": "image/jpeg", "data": "<base64>" }
 ```
 
-- **Sigils** are one of six bundled ids: `cat`, `moon`, `sun`, `star`, `mushroom`, `owl`.
-  Rendered from local SVG assets, so they add nothing to the wire.
+- **Stamps** are one of six bundled ids: `bee`, `cat`, `leaf`, `moon`, `mushroom`, `sea`.
+  The app bundles WebP art and the Worker inlines it as a data URI, so only the id travels in
+  the payload. The photographed silhouette is shown as-is — no circular crop, no disc. Legacy
+  ids (`sun`, `star`, `owl`) still render the old line-art so existing recipes keep their seal.
 - **Images** are chosen once in Settings, cropped square, and re-encoded by the app to
   256×256 JPEG (quality ~0.8, target ≤ 32 KB). Re-encoding strips EXIF, so location data
   never leaves the phone.
-- Server validation: `kind` must be `sigil` or `image`; sigil ids must be in the allowlist;
-  `mime` must be `image/jpeg` or `image/png`; base64 must decode to ≤ 32 KB; the bytes must
-  match the declared magic number. **SVG, GIF, and WebP are rejected.** The server never echoes
-  raw input — it rebuilds the data URI from the validated MIME and bytes.
-- Rendering: the seal sits inside the wax rim. An unknown sigil id or a missing seal falls back
-  to the default seal. A seal is decoration; nothing depends on it for meaning.
+- Server validation: `kind` must be `sigil` or `image`; sigil ids must be in the allowlist
+  (six stamps plus the legacy ids); `mime` must be `image/jpeg` or `image/png`; base64 must
+  decode to ≤ 32 KB; the bytes must match the declared magic number. **SVG, GIF, and WebP are
+  rejected as uploads** (WebP is used only for bundled stamp art). The server never echoes raw
+  input — it rebuilds the data URI from the validated MIME and bytes.
+- Rendering: a bundled stamp renders as its cut-out image; a custom photo seal keeps the
+  circular clip and navy rim; a legacy id renders the old line-art disc. An unknown or missing
+  seal falls back to `cat`. A seal is decoration; nothing depends on it for meaning.
 
 ---
 
@@ -259,7 +267,8 @@ WhatsApp caches previews aggressively; keep the page stable and never change sha
 
 Order of the page, top to bottom:
 
-1. Sender seal, title, "12 passos · por Lucas" (seal as inline SVG or a data-URI image).
+1. Sender stamp, title, "12 passos · por Lucas" (stamp as an inlined data-URI image; legacy
+   sigil as inline SVG; photo seal as a data-URI image).
 2. Rendered markdown, full recipe (not a teaser — this is the same content the app would show).
 3. **Copiar receita** — copies WhatsApp-flavored text (`*bold*`, numbered lines). Works with a
    JS clipboard call; without JS the text is still selectable.
@@ -351,7 +360,7 @@ normalized markdown is what gets stored.
 
 ### 6.7 Settings
 - Display name (used as `sender`).
-- **Seu selo:** the six sigils in a grid (one selected) plus **Enviar imagem** (circle crop,
+- **Seu selo:** the six stamps in a grid (one selected) plus **Enviar imagem** (circle crop,
   re-encode to 256×256 JPEG). A live preview shows the seal as it will appear on shares.
 - Export backup (zip) / Import backup.
 - Check for updates → compares `version.json`, offers the APK link.
@@ -391,7 +400,7 @@ normalized markdown is what gets stored.
   ids make guessing impractical, but the link is a bearer token. Say so in the app's about text.
 - No personal data on the server beyond an optional first name.
 - No analytics, no third-party SDKs.
-- Seals: sigils come from a fixed allowlist; uploaded seals are capped at 32 KB, magic-byte
+- Seals: built-in ids come from a fixed allowlist; uploaded seals are capped at 32 KB, magic-byte
   checked, and served with a server-chosen `Content-Type` plus `nosniff`. SVG is never accepted.
 - The write key is compiled into the APK and extractable. Accepted: abuse risk is KV spam,
   mitigated by rate limiting and size caps. If it ever matters, add a per-device token.
@@ -459,10 +468,11 @@ still worth keeping — and the web page means no link is ever wasted.
 
 ## 12. Open questions
 
+Resolved since the draft: the fallback seal is the `cat` stamp.
+
 1. Should "Salvar" keep the share back-link, enabling "Atualizar cópia" later? (Spec says yes
    via `source_share_id`.)
 2. Should the share message include the recipe text too, or stay link-only? (Spec says link-only.)
-3. Default seal when someone never picks one: a neutral wax seal, or the first sigil?
-4. The recipient downloads the seal image when they open the link. Acceptable, or should a
+3. The recipient downloads the seal image when they open the link. Acceptable, or should a
    custom photo seal be opt-in per share?
 

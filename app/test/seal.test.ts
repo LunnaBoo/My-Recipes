@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  LEGACY_SIGIL_IDS,
   MAX_SEAL_BYTES,
   SIGIL_IDS,
   base64ByteLength,
@@ -19,9 +20,18 @@ function base64(bytes: Uint8Array | number[]): string {
 const JPEG = [0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0xff, 0xd9];
 const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d];
 
-test('accepts every allowed sigil id', () => {
+test('accepts every selectable stamp id', () => {
+  assert.deepEqual([...SIGIL_IDS], ['bee', 'cat', 'leaf', 'moon', 'mushroom', 'sea']);
   for (const id of SIGIL_IDS) {
     assert.deepEqual(parseSeal({ kind: 'sigil', id }), { kind: 'sigil', id });
+  }
+});
+
+test('still accepts the legacy line-art sigils', () => {
+  assert.deepEqual([...LEGACY_SIGIL_IDS], ['sun', 'star', 'owl']);
+  for (const id of LEGACY_SIGIL_IDS) {
+    assert.deepEqual(parseSeal({ kind: 'sigil', id }), { kind: 'sigil', id });
+    assert.deepEqual(sealFromStored(sealToStored({ kind: 'sigil', id })), { kind: 'sigil', id });
   }
 });
 

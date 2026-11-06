@@ -1,12 +1,20 @@
-import type { Recipe, SealName, SenderSeal } from "./util";
+import type {
+  LegacySealName,
+  Recipe,
+  SealName,
+  SenderSeal,
+  StampName,
+} from "./util";
 import {
   buildDescription,
   escapeAttr,
   escapeHtml,
   formatDate,
-  isSealName,
+  isLegacySealName,
+  isStampName,
 } from "./util";
 import { renderMarkdown, toWhatsAppText } from "./markdown";
+import { SEAL_IMAGES } from "./seals";
 
 const SITE = "My Recipes";
 const ANDROID_PACKAGE = "com.lunnaboo.myrecipes";
@@ -47,11 +55,11 @@ ${flourish(true)}
 }
 
 /* ------------------------------------------------------------------ *
- * Seals — bare line-art sigils inside a single navy circle.
- * The circle is the only container: one fill, one thin rim.
+ * Seals — photographic wax stamps by default; legacy line-art sigils
+ * are still rendered for recipes created before the stamp art landed.
  * ------------------------------------------------------------------ */
 
-const SIGILS: Record<SealName, string> = {
+const SIGILS: Record<LegacySealName, string> = {
   star: `<path d="M24,7 L28.2,18.2 L40,18.2 L30.4,26 L34.2,38 L24,30.6 L13.8,38 L17.6,26 L8,18.2 L19.8,18.2 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
   owl: `<path d="M12,38 L12,22 C12,14 18,8 24,8 C30,8 36,14 36,22 L36,38 C36,40 34,42 32,42 L16,42 C14,42 12,40 12,38 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="19" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -60,26 +68,12 @@ const SIGILS: Record<SealName, string> = {
 <circle cx="29" cy="22" r="1.5" fill="currentColor"/>
 <path d="M24,26 L21,30 L27,30 Z" fill="currentColor"/>
 <path d="M24,14 L24,10 M18,12 L20,16 M30,12 L28,16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`,
-  cat: `<path d="M13,19 L11,8 L21,15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M35,19 L37,8 L27,15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M13,19 C13,31 18,39 24,39 C30,39 35,31 35,19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="19" cy="24" r="1.6" fill="currentColor"/>
-<circle cx="29" cy="24" r="1.6" fill="currentColor"/>
-<path d="M24,29 L22,31 L24,32 L26,31 Z" fill="currentColor"/>
-<path d="M24,32 L24,34 M24,34 C22.5,36 20.5,36 19.5,35 M24,34 C25.5,36 27.5,36 28.5,35" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-<path d="M8,25 L16,26.5 M8,30 L16,29.5 M40,25 L32,26.5 M40,30 L32,29.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>`,
-  moon: `<path d="M31,7 C19,10 12,19 12,28 C12,37 19,43 29,42 C21,38 17,32 17,24 C17,16 22,10 31,7 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
   sun: `<circle cx="24" cy="24" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/>
 <path d="M24,5 L24,10 M24,38 L24,43 M5,24 L10,24 M38,24 L43,24 M10.5,10.5 L14,14 M34,34 L37.5,37.5 M37.5,10.5 L34,14 M14,34 L10.5,37.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`,
-  mushroom: `<path d="M10,24 C10,15 16,9 24,9 C32,9 38,15 38,24 L10,24 Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M20,24 L20,38 C20,40 22,41 24,41 C26,41 28,40 28,38 L28,24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="18" cy="17" r="1.6" fill="currentColor"/>
-<circle cx="27" cy="14" r="1.6" fill="currentColor"/>
-<circle cx="30" cy="20" r="1.6" fill="currentColor"/>`,
 };
 
 function renderSigilSeal(
-  name: SealName,
+  name: LegacySealName,
   size: "sm" | "lg",
   hook: string,
 ): string {
@@ -90,6 +84,18 @@ function renderSigilSeal(
 <circle cx="40" cy="40" r="38" fill="none" stroke="#202B40" stroke-width="2"/>
 </svg>
 </span>`;
+}
+
+/**
+ * Stamp seal: the bundled webp art is inlined as a data URI and scaled with
+ * `object-fit: contain`, so irregular silhouettes are never cropped.
+ */
+function renderStampSeal(
+  id: StampName,
+  size: "sm" | "lg",
+  hook: string,
+): string {
+  return `<span class="seal seal-${size}" data-seal="${escapeAttr(hook)}" aria-hidden="true"><img class="seal-stamp" src="${escapeAttr(SEAL_IMAGES[id])}" alt=""></span>`;
 }
 
 /**
@@ -109,27 +115,29 @@ function renderImageSeal(
 }
 
 /**
- * Render one seal. `size` is a preset, not a pixel value, so the circle
- * stays one consistent container at every call site. A bare sigil name is
- * accepted for static pages; anything unrecognised falls back to the star.
- * The `data-seal` hook is the sigil id, `image`, or `default`.
+ * Render one seal. `size` is a preset, not a pixel value, so the seal stays
+ * one consistent container at every call site. Stamps render their bundled
+ * art, legacy ids keep the line-art sigil, photos keep the circular clip,
+ * and anything unrecognised falls back to the cat stamp. The `data-seal`
+ * hook is the seal id, `image`, or `default`.
  */
 export function renderSeal(
   seal: SenderSeal | SealName | undefined,
   size: "sm" | "lg" = "lg",
 ): string {
   if (typeof seal === "string") {
-    return isSealName(seal)
-      ? renderSigilSeal(seal, size, seal)
-      : renderSigilSeal("star", size, "default");
+    if (isStampName(seal)) return renderStampSeal(seal, size, seal);
+    if (isLegacySealName(seal)) return renderSigilSeal(seal, size, seal);
+    return renderStampSeal("cat", size, "default");
   }
-  if (seal?.kind === "sigil" && isSealName(seal.id)) {
-    return renderSigilSeal(seal.id, size, seal.id);
+  if (seal?.kind === "sigil") {
+    if (isStampName(seal.id)) return renderStampSeal(seal.id, size, seal.id);
+    if (isLegacySealName(seal.id)) return renderSigilSeal(seal.id, size, seal.id);
   }
   if (seal?.kind === "image") {
     return renderImageSeal(seal, size);
   }
-  return renderSigilSeal("star", size, "default");
+  return renderStampSeal("cat", size, "default");
 }
 
 const ERROR_ORNAMENT = `<svg class="error-ornament" viewBox="0 0 80 80" aria-hidden="true" focusable="false">
@@ -314,10 +322,16 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 50%;
+  vertical-align: middle;
 }
 .seal-lg { width: 80px; height: 80px; }
-.seal-sm { width: 30px; height: 30px; }
+.seal-sm { width: 28px; height: 28px; }
+.seal-stamp {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .seal-svg {
   display: block;
   width: 100%;
@@ -327,6 +341,7 @@ body {
 .seal-image {
   position: relative;
   overflow: hidden;
+  border-radius: 50%;
   background: var(--navy);
 }
 .seal-photo {
@@ -802,7 +817,7 @@ ${ivyCorner("br")}
 <div class="page-scroll">
 ${sectionHeader(site, true)}
 <div class="install-hero">
-${renderSeal("owl", "lg")}
+${renderSeal("cat", "lg")}
 <p>Um caderno de receitas para duas pessoas na cozinha. Cole, organize e compartilhe receitas como cartas seladas.</p>
 </div>
 ${apkNote}

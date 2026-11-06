@@ -5,9 +5,10 @@ short links that open the app — or render as a web page if the app isn't insta
 
 - Product and technical spec: [`SPEC.md`](./SPEC.md)
 - Worker (short links, share page, APK hosting): [`worker/`](./worker)
-- Android app: `app/` (Expo, not scaffolded yet)
+- Android app (Expo / React Native): [`app/`](./app)
+- Visual system: [`DESIGN.md`](./DESIGN.md)
 
-Share host: `https://r.lunna.boo/<id>`
+Share host: `https://r.lunna.boo/r/<id>`
 
 ## Status
 
@@ -15,5 +16,5 @@ Current state, remaining work, and the release order live in [`PLAN.md`](./PLAN.
 Working conventions for agents and contributors are in [`AGENTS.md`](./AGENTS.md).
 
 - Live: `https://r.lunna.boo` (share links, install page, APK + version endpoints)
-- Installed: v1 (versionCode 1); v2 is the next release
+- Released: v1.2.0 (versionCode 3, 2026-11-05); next up is v4 polish
 - Repo: `https://github.com/LunnaBoo/My-Recipes`

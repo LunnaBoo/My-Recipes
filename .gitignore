@@ -50,3 +50,6 @@ yarn-error.log*
 credentials/
 credentials.json
 keystore-password.txt
+
+# local staging (source images, not shipped)
+incoming/

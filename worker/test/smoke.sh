@@ -478,6 +478,20 @@ STATUS="$(request GET "$BASE/r/$SEAL_ID")"
 check_status "GET sigil share page -> 200" 200
 check_body_contains "page renders the owl sigil hook" 'data-seal="owl"'
 
+make_seal_payload "$TMP/seal-sea.json" "Receita com selo novo" "1. Um passo." "Ana" \
+  '{"kind":"sigil","id":"sea"}'
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/seal-sea.json")"
+check_status "POST sigil sea -> 201" 201
+STAMP_ID="$(json_get id)"
+
+STATUS="$(request GET "$BASE/r/$STAMP_ID")"
+check_status "GET sea share page -> 200" 200
+check_body_contains "page renders the sea stamp hook" 'data-seal="sea"'
+check_body_contains "page inlines the sea stamp as webp art" 'class="seal-stamp" src="data:image/webp'
+
 STATUS="$(request GET "$BASE/r/$ID")"
 check_body_contains "recipe without a seal falls back to the default hook" 'data-seal="default"'
 

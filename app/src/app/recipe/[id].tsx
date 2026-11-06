@@ -240,7 +240,7 @@ export default function RecipeViewScreen() {
 
         <View style={styles.headerRow}>
           <View style={styles.sender}>
-            {imported ? <Seal size={30} seal={sourceSeal} /> : null}
+            {imported ? <Seal size={28} seal={sourceSeal} /> : null}
             {imported && sender ? (
               <Text style={styles.letterFrom}>{ptBR.letterFrom(sender)}</Text>
             ) : null}

@@ -381,14 +381,16 @@ const styles = StyleSheet.create({
   },
   sigilCell: {
     width: '31%',
-    minHeight: 72,
+    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 999,
+    borderRadius: theme.radii.lg,
+    backgroundColor: theme.colors.parchment,
     borderWidth: 2,
-    borderColor: theme.colors.parchment,
+    borderColor: 'transparent',
   },
   sigilCellSelected: {
+    backgroundColor: theme.colors.cream,
     borderColor: theme.colors.gold,
   },
   pressed: {

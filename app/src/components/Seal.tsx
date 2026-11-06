@@ -1,63 +1,50 @@
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  View,
+  type ImageSourcePropType,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import type { ImageSeal, Seal as SealValue } from '../lib/seal';
+import type { ImageSeal, LegacySigilId, Seal as SealValue, SigilId, StampId } from '../lib/seal';
+import { isStampId } from '../lib/seal';
 import { theme } from '../theme';
 
-export type SealSigil = 'cat' | 'moon' | 'sun' | 'star' | 'mushroom' | 'owl';
+const STAMP_IMAGES: Record<StampId, ImageSourcePropType> = {
+  bee: require('../../assets/seals/bee.webp'),
+  cat: require('../../assets/seals/cat.webp'),
+  leaf: require('../../assets/seals/leaf.webp'),
+  moon: require('../../assets/seals/moon.webp'),
+  mushroom: require('../../assets/seals/mushroom.webp'),
+  sea: require('../../assets/seals/sea.webp'),
+};
 
 type SealProps = {
   size?: number;
-  sigil?: SealSigil;
+  sigil?: SigilId;
   /** A parsed sender seal; takes precedence over the `sigil` fallback. */
   seal?: SealValue | null;
   style?: StyleProp<ViewStyle>;
 };
 
-function SigilMark({ sigil }: { sigil: SealSigil }) {
+/** Bundled photographic wax stamp: irregular silhouette, no disc or rim. */
+function StampMark({ id, size }: { id: StampId; size: number }) {
+  return (
+    <Image
+      accessible={false}
+      resizeMode="contain"
+      source={STAMP_IMAGES[id]}
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+function SigilMark({ sigil }: { sigil: LegacySigilId }) {
   const stroke = theme.colors.cream;
 
   switch (sigil) {
-    case 'cat':
-      return (
-        <>
-          <Path
-            d="M14,38 L14,28 C14,20 20,14 28,14 L34,10 L34,20 C38,22 40,26 40,30 C40,38 32,42 24,42 C20,42 16,40 14,38 Z"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={2.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Circle cx={20} cy={28} r={2.2} fill={stroke} />
-          <Circle cx={32} cy={28} r={2.2} fill={stroke} />
-          <Path
-            d="M24,32 Q26,35 24,38 Q22,35 24,32"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={1.8}
-            strokeLinecap="round"
-          />
-          <Path
-            d="M18,20 L22,24 M30,24 L34,20"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={1.8}
-            strokeLinecap="round"
-          />
-        </>
-      );
-    case 'moon':
-      return (
-        <Path
-          d="M28,8 C20,8 14,16 14,26 C14,36 20,44 28,44 C32,44 36,42 38,40 C34,42 28,38 28,26 C28,14 34,10 38,12 C36,10 32,8 28,8 Z"
-          fill="none"
-          stroke={stroke}
-          strokeWidth={2.2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      );
     case 'sun':
       return (
         <>
@@ -69,29 +56,6 @@ function SigilMark({ sigil }: { sigil: SealSigil }) {
             strokeWidth={2.2}
             strokeLinecap="round"
           />
-        </>
-      );
-    case 'mushroom':
-      return (
-        <>
-          <Path
-            d="M24,40 L24,26 M16,40 L32,40"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={2.2}
-            strokeLinecap="round"
-          />
-          <Path
-            d="M8,26 C8,16 16,8 24,8 C32,8 40,16 40,26 C40,28 38,30 36,30 L12,30 C10,30 8,28 8,26 Z"
-            fill="none"
-            stroke={stroke}
-            strokeWidth={2.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Circle cx={16} cy={20} r={2} fill={stroke} />
-          <Circle cx={30} cy={18} r={1.6} fill={stroke} />
-          <Circle cx={36} cy={24} r={1.3} fill={stroke} />
         </>
       );
     case 'owl':
@@ -173,10 +137,11 @@ function ImageSealMark({ seal, size }: { seal: ImageSeal; size: number }) {
 }
 
 /**
- * Plain wax-seal disc: one navy fill, one thin rim, cream line-art sigil.
- * Decorative only; the sender name is always shown as text next to it.
+ * Sender seal. Photo seals keep the circular wax frame; bundled photo stamps
+ * render their own irregular silhouette; legacy sun/star/owl ids keep the old
+ * navy disc line-art so stored recipes never change appearance.
  */
-export function Seal({ size = 30, sigil = 'star', seal, style }: SealProps) {
+export function Seal({ size = 30, sigil = 'cat', seal, style }: SealProps) {
   const image = seal?.kind === 'image' ? seal : null;
   const chosenSigil = seal?.kind === 'sigil' ? seal.id : sigil;
 
@@ -189,6 +154,8 @@ export function Seal({ size = 30, sigil = 'star', seal, style }: SealProps) {
     >
       {image ? (
         <ImageSealMark seal={image} size={size} />
+      ) : isStampId(chosenSigil) ? (
+        <StampMark id={chosenSigil} size={size} />
       ) : (
         <Svg width={size} height={size} viewBox="0 0 48 48">
           <Circle

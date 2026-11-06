@@ -42,8 +42,11 @@ gestures) can only be verified on a phone.
 ## Non-negotiable constraints
 
 - **No tags.** Removed from v1 on purpose — no column, no chips, no payload field.
-- **Seals are ids, never markup.** Built-in sigils only (`cat`, `moon`, `sun`, `star`,
-  `mushroom`, `owl`). Uploaded seals are JPEG/PNG, ≤32 KB, magic-byte checked. SVG is refused.
+- **Seals are ids, never markup.** Built-in stamps only (`bee`, `cat`, `leaf`, `moon`,
+  `mushroom`, `sea`). The art is WebP bundled in the app and inlined as a data URI on the web
+  page; the payload carries just the id. Legacy ids (`sun`, `star`, `owl`) stay renderable for
+  old recipes but are not selectable. Uploaded seals are JPEG/PNG, ≤32 KB, magic-byte checked.
+  SVG is refused.
 - **Same signing key forever.** `app/credentials/android-release.jks`. Losing it means every
   user must uninstall and lose local data. Never commit it; it is gitignored.
 - **`versionCode` only goes up.** Android refuses downgrades, so a bad release is fixed by

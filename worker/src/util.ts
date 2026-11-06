@@ -3,17 +3,46 @@
  * Everything here assumes untrusted input: escape before interpolating.
  */
 
-/** The six bundled line-art seals. Keep in sync with SPEC §4.3. */
-export const SEAL_NAMES = [
+import type { StampName } from "./seals";
+
+export type { StampName };
+
+/** The six selectable photographic wax-stamp seals. */
+export const STAMP_NAMES = [
+  "bee",
   "cat",
+  "leaf",
   "moon",
-  "sun",
-  "star",
   "mushroom",
-  "owl",
+  "sea",
+] as const satisfies readonly StampName[];
+
+/** Legacy line-art sigils, still accepted and rendered for old recipes. */
+export const LEGACY_SEAL_NAMES = ["sun", "star", "owl"] as const;
+
+export type LegacySealName = (typeof LEGACY_SEAL_NAMES)[number];
+
+/** Combined allowlist used by validation and rendering. */
+export const SEAL_NAMES = [
+  ...STAMP_NAMES,
+  ...LEGACY_SEAL_NAMES,
 ] as const;
 
 export type SealName = (typeof SEAL_NAMES)[number];
+
+export function isStampName(value: unknown): value is StampName {
+  return (
+    typeof value === "string" &&
+    (STAMP_NAMES as readonly string[]).includes(value)
+  );
+}
+
+export function isLegacySealName(value: unknown): value is LegacySealName {
+  return (
+    typeof value === "string" &&
+    (LEGACY_SEAL_NAMES as readonly string[]).includes(value)
+  );
+}
 
 export function isSealName(value: unknown): value is SealName {
   return (

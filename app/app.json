@@ -13,9 +13,8 @@
     "android": {
       "package": "com.lunnaboo.myrecipes",
       "adaptiveIcon": {
-        "backgroundColor": "#243320",
+        "backgroundColor": "#E8D9B8",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,

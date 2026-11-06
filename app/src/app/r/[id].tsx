@@ -185,7 +185,7 @@ export default function SharedRecipeScreen() {
     return (
       <ScreenFrame corners="diagonal">
         <View style={styles.centered}>
-          <Seal size={64} sigil="star" />
+          <Seal size={64} sigil="cat" />
           <Text style={styles.errorText}>{errorMessage(shown)}</Text>
           {isRetryable(shown) ? (
             <Pressable

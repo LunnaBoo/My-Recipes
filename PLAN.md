@@ -27,7 +27,7 @@ Last updated: 2026-11-05
 - Public at `github.com/LunnaBoo/My-Recipes`. Secret scanning + push protection enabled.
 - `scripts/preflight.sh` runs on pre-push via `core.hooksPath`.
 
-## Next releases
+## Releases
 
 ### v2 — shipped (versionCode 2)
 Released 2026-11-05 as `v1.1.0`.
@@ -48,13 +48,17 @@ Released 2026-11-05 as `v1.1.0`.
 - [x] **Backup export/import** — zip with `recipe-index.json` + `recipes/*.md`; import merges by
       id and reports conflicts. Needed before a third person installs.
 - [x] **Trash screen** — list with "expira em N dias", restore, delete forever, empty state.
-- [x] **Seals** — Worker validation/rendering deployed; picker, payload, and rendering in the app shipped in `28c7351`. with six sigils + photo; store in `profile`; send
-      `senderSeal` in the share payload; Worker validation + storage; render on the web page
-      and in the import letter; fall back to the default star.
+- [x] **Seals** — six photographic wax stamps (`bee`, `cat`, `leaf`, `moon`, `mushroom`, `sea`)
+      plus photo. The picker and photo re-encode store the seal in `profile`; shares send
+      `senderSeal`; the Worker validates, stores, and renders it on the web page and in the
+      import letter. Legacy `sun`/`star`/`owl` still render; fallback is `cat`.
 - [x] Editor toolbar (bold, italic, heading, list, checkbox, rule) + Editar/Pré-visualizar toggle — `b71e5dd`.
 
 ### v4 — polish (versionCode 4)
-- [ ] Single custom launcher icon + splash (currently Expo template art).
+- [x] Custom launcher icon: black line-art on parchment, adaptive foreground + monochrome layer.
+- [ ] Splash still uses the Expo template art.
+- [x] Six bundled photographic wax stamps replacing the line-art sigils (WebP, alpha, real
+      silhouettes); legacy sigils still render.
 - [ ] Drop x86 ABIs to roughly halve the 100 MB APK.
 - [ ] Cloudflare edge rate-limit rule on `POST /api/recipes` (spec: 20 writes/hour/IP).
 - [ ] `og:image` static card for link previews.
@@ -75,9 +79,9 @@ Decision: **the launcher icon never changes.** One icon, one identity. Theme aff
 in-app look only — no `activity-alias` icon switching, no app restart on theme change.
 
 ### v3 progress notes
-- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as sigil or circular photo. 138 smoke assertions.
+- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 142 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
-- All v3 features are implemented; next is the build (versionCode 3, 1.2.0) and release.
+- All v3 features are implemented and released as 1.2.0 (versionCode 3) on 2026-11-05.
 
 ## Verification debt
 
@@ -88,6 +92,7 @@ These have never run on a device and need a phone pass:
 - [ ] Updater: download progress, installer handoff, "install unknown apps" recovery.
 - [ ] Parchment layout at 360dp and at 200% font scale, including the new 42px panel inset.
 - [ ] ActionSheet/ConfirmDialog stacking and dismissal.
+- [ ] Seal stamps: picker grid, 28/56/96 dp silhouettes, and WebP bundling on a real device.
 - [ ] Share sheet message format in WhatsApp.
 
 ## Open questions

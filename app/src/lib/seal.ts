@@ -7,9 +7,15 @@
  * image is caught in Settings and the previous seal is kept.
  */
 
-export const SIGIL_IDS = ['cat', 'moon', 'sun', 'star', 'mushroom', 'owl'] as const;
+/** Selectable wax-stamp ids, in picker order. */
+export const SIGIL_IDS = ['bee', 'cat', 'leaf', 'moon', 'mushroom', 'sea'] as const;
 
-export type SigilId = (typeof SIGIL_IDS)[number];
+/** Ids from the old line-art set. Still accepted so old recipes keep their seal. */
+export const LEGACY_SIGIL_IDS = ['sun', 'star', 'owl'] as const;
+
+export type StampId = (typeof SIGIL_IDS)[number];
+export type LegacySigilId = (typeof LEGACY_SIGIL_IDS)[number];
+export type SigilId = StampId | LegacySigilId;
 export type SealKind = 'sigil' | 'image';
 export type SealMime = 'image/jpeg' | 'image/png';
 
@@ -39,8 +45,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function isSigilId(value: unknown): value is SigilId {
+export function isStampId(value: unknown): value is StampId {
   return typeof value === 'string' && (SIGIL_IDS as readonly string[]).includes(value);
+}
+
+export function isSigilId(value: unknown): value is SigilId {
+  return (
+    typeof value === 'string' &&
+    ((SIGIL_IDS as readonly string[]).includes(value) ||
+      (LEGACY_SIGIL_IDS as readonly string[]).includes(value))
+  );
 }
 
 function base64Char(code: number): number {
