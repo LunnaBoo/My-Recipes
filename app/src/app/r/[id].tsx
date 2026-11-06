@@ -276,7 +276,7 @@ export default function SharedRecipeScreen() {
 
         <View style={styles.letter}>
           <View style={styles.sealWrap}>
-            <Seal size={80} seal={senderSeal} />
+            <Seal size={92} seal={senderSeal} />
           </View>
 
           <Text style={styles.letterFrom}>

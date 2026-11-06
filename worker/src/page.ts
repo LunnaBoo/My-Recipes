@@ -324,7 +324,7 @@ body {
   flex-shrink: 0;
   vertical-align: middle;
 }
-.seal-lg { width: 80px; height: 80px; }
+.seal-lg { width: 92px; height: 92px; }
 .seal-sm { width: 28px; height: 28px; }
 .seal-stamp {
   display: block;

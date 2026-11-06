@@ -219,7 +219,7 @@ export default function SealScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.previewLabel}>{ptBR.sealPreviewLabel}</Text>
         <View style={styles.preview}>
-          <Seal size={96} seal={seal} />
+          <Seal size={110} seal={seal} />
         </View>
 
         {message ? (
