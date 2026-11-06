@@ -15,6 +15,7 @@ import {
 } from "./util";
 import { renderMarkdown, toWhatsAppText } from "./markdown";
 import { SEAL_IMAGES } from "./seals";
+import { APP_ICON } from "./appIcon";
 
 const SITE = "My Recipes";
 const ANDROID_PACKAGE = "com.lunnaboo.myrecipes";
@@ -530,10 +531,11 @@ body {
   text-align: center;
   margin-bottom: 18px;
 }
-.install-hero .seal {
-  width: 72px;
-  height: 72px;
-  margin-bottom: 10px;
+.install-icon {
+  display: block;
+  width: clamp(160px, 46vw, 208px);
+  height: auto;
+  margin: 0 auto 14px;
 }
 .install-hero p {
   font-size: 17px;
@@ -654,6 +656,8 @@ body {
     border-radius: 22px;
   }
   .page-scroll { padding: 36px 28px 100px; }
+  .seal-lg { width: 120px; height: 120px; }
+  .share-seal-wrap { margin-bottom: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -817,7 +821,7 @@ ${ivyCorner("br")}
 <div class="page-scroll">
 ${sectionHeader(site, true)}
 <div class="install-hero">
-${renderSeal("cat", "lg")}
+<img class="install-icon" src="${escapeAttr(APP_ICON)}" alt="" aria-hidden="true">
 <p>Um caderno de receitas para duas pessoas na cozinha. Cole, organize e compartilhe receitas como cartas seladas.</p>
 </div>
 ${apkNote}
