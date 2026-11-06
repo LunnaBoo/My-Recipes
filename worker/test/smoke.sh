@@ -166,6 +166,33 @@ make_seal_payload() {
   ' "$out" "$title" "$body" "$sender"
 }
 
+# Mailbox registration body: { address, secret, name, seal }.
+make_mailbox_body() {
+  local out="$1" address="$2" secret="$3" name="$4" seal="$5"
+  MAILBOX_ADDRESS="$address" MAILBOX_SECRET="$secret" MAILBOX_NAME="$name" \
+    SEAL_JSON="$seal" node -e '
+    const fs = require("fs");
+    fs.writeFileSync(process.argv[1], JSON.stringify({
+      address: process.env.MAILBOX_ADDRESS,
+      secret: process.env.MAILBOX_SECRET,
+      name: process.env.MAILBOX_NAME,
+      seal: JSON.parse(process.env.SEAL_JSON),
+    }));
+  ' "$out"
+}
+
+# Letter send body: { shareId, senderAddress }.
+make_send_body() {
+  local out="$1" shareId="$2" sender="$3"
+  SHARE_ID="$shareId" SENDER_ADDRESS="$sender" node -e '
+    const fs = require("fs");
+    fs.writeFileSync(process.argv[1], JSON.stringify({
+      shareId: process.env.SHARE_ID,
+      senderAddress: process.env.SENDER_ADDRESS,
+    }));
+  ' "$out"
+}
+
 command -v curl >/dev/null 2>&1 || {
   echo "curl is required" >&2
   exit 2
@@ -383,6 +410,9 @@ check_status "GET share page -> 200" 200
 check_header_contains "share page is HTML" 'content-type' 'text/html'
 check_header_contains "CSP present" 'content-security-policy' "default-src 'none'"
 check_header_contains "CSP script-src is self only" 'content-security-policy' "script-src 'self'"
+check_header_contains "CSP blocks framing" 'content-security-policy' "frame-ancestors 'none'"
+check_header_contains "X-Frame-Options denies framing" 'x-frame-options' 'DENY'
+check_header_contains "Permissions-Policy locks device APIs" 'permissions-policy' 'camera=()'
 check_header_contains "noindex header" 'x-robots-tag' 'noindex'
 check_header_contains "share page cache policy" 'cache-control' 'private, max-age=300'
 HEAD_CODE="$(curl -sS --max-time 30 --head -o /dev/null -w '%{http_code}' "$BASE/r/$ID" || true)"
@@ -728,6 +758,277 @@ STATUS="$(request POST "$BASE/api/recipes" \
   --data-binary @"$TMP/idem.json")"
 check_status "idempotent POST retry -> 201" 201
 check_eq "retry returns the original id" "$IDEM_ID" "$(json_get id)"
+
+echo
+echo "== Write rate limit =="
+
+# A unique non-loopback client IP per run so a persisted DO cannot leak state
+# between runs (the smoke state dir is fresh, but this keeps it obvious).
+RL_IP="203.0.113.$((RANDOM % 250 + 1))"
+make_payload "$TMP/rate.json" "Receita limitada" "1. Um passo." "Ana"
+
+RL_UNEXPECTED=""
+for i in $(seq 1 20); do
+  STATUS="$(request POST "$BASE/api/recipes" \
+    -H "X-App-Key: $APP_KEY_VALUE" \
+    -H "CF-Connecting-IP: $RL_IP" \
+    -H 'Content-Type: application/json' \
+    --data-binary @"$TMP/rate.json")"
+  if [ "$STATUS" != "201" ]; then
+    RL_UNEXPECTED="$i:${STATUS:-no response}"
+    break
+  fi
+done
+check_eq "first 20 writes from one IP are allowed" "" "$RL_UNEXPECTED"
+
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "CF-Connecting-IP: $RL_IP" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/rate.json")"
+check_status "21st write from the same IP -> 429" 429
+check_body_contains "429 body is rate_limited" '"error":"rate_limited"'
+check_regex "429 includes a Retry-After in seconds" \
+  '^[0-9]+$' "$(header_value 'Retry-After')"
+
+# A different IP still has its own budget.
+RL_OTHER_IP="203.0.113.$(( (10#${RL_IP##*.} % 250) + 1 ))"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "CF-Connecting-IP: $RL_OTHER_IP" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/rate.json")"
+check_status "a different IP is not limited -> 201" 201
+
+echo
+echo "== Mailboxes =="
+
+MAILBOX_A="aaaaaaaaaaaa"
+MAILBOX_B="bbbbbbbbbbbb"
+MAILBOX_C="cccccccccccc"
+MAILBOX_MISSING="zzzzzzzzzzzz"
+SECRET_A="$(printf 'a%063d' 0)"
+SECRET_B="$(printf 'b%063d' 0)"
+SECRET_C="$(printf 'c%063d' 0)"
+SECRET_WRONG="$(printf 'd%063d' 0)"
+
+make_mailbox_body "$TMP/mailbox-a.json" "$MAILBOX_A" "$SECRET_A" "Lucas" \
+  '{"kind":"sigil","id":"cat"}'
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-a.json")"
+check_status "POST mailbox A -> 201" 201
+check_eq "mailbox create returns the address" "$MAILBOX_A" "$(json_get address)"
+check_header_contains "mailbox create is no-store" 'cache-control' 'no-store'
+
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-a.json")"
+check_status "repeat create with the same secret -> 200" 200
+
+make_mailbox_body "$TMP/mailbox-a-other.json" "$MAILBOX_A" "$SECRET_WRONG" \
+  "Intruso" '{"kind":"sigil","id":"moon"}'
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-a-other.json")"
+check_status "same address, different secret -> 409" 409
+check_body_contains "409 body is address_taken" '"error":"address_taken"'
+
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-a.json")"
+check_status "mailbox create without X-App-Key -> 401" 401
+
+make_mailbox_body "$TMP/mailbox-b.json" "$MAILBOX_B" "$SECRET_B" "Ana" \
+  '{"kind":"sigil","id":"leaf"}'
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-b.json")"
+check_status "POST mailbox B -> 201" 201
+
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_A/profile")"
+check_status "GET public mailbox profile -> 200" 200
+check_eq "profile name" "Lucas" "$(json_get name)"
+check_eq "profile seal id" "cat" "$(json_get seal.id)"
+check_body_not_contains "profile never exposes the secret hash" 'secretHash'
+
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_MISSING/profile")"
+check_status "profile of an unknown mailbox -> 404" 404
+check_body_contains "unknown mailbox is not_found" '"error":"not_found"'
+
+printf '%s' '{"name":"Lucas P.","seal":{"kind":"sigil","id":"sea"}}' \
+  >"$TMP/mailbox-profile.json"
+STATUS="$(request PUT "$BASE/api/mailboxes/$MAILBOX_A" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-profile.json")"
+check_status "PUT mailbox profile with the owner secret -> 200" 200
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_A/profile")"
+check_eq "profile name updated" "Lucas P." "$(json_get name)"
+check_eq "profile seal updated" "sea" "$(json_get seal.id)"
+
+# A live share to attach to the letters.
+make_payload "$TMP/letter.json" "Carta de teste" \
+  "$(printf '%s\n' \
+    '1. Separe os ingredientes.' \
+    '2. Misture tudo.' \
+    '3. Sirva quente.')" \
+  "Lucas"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/letter.json")"
+check_status "letter fixture share -> 201" 201
+LETTER_SHARE="$(json_get id)"
+
+make_send_body "$TMP/send-letter.json" "$LETTER_SHARE" "$MAILBOX_A"
+LETTER_IDEM="smoke-letter-$(date +%s%N)-$$"
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H "X-Idempotency-Key: $LETTER_IDEM" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-letter.json")"
+check_status "send letter A -> B -> 201" 201
+LETTER_ID="$(json_get letter.id)"
+check_regex "letter id is 12 chars from the safe alphabet" \
+  '^[abcdefghjkmnpqrstuvwxyz23456789]{12}$' "$LETTER_ID"
+check_eq "sent letter joins the title" "Carta de teste" "$(json_get letter.title)"
+check_eq "sent letter joins the step count" "3" "$(json_get letter.stepCount)"
+check_eq "sent letter joins the sender" "Lucas" "$(json_get letter.sender)"
+check_eq "sent letter is available" "true" "$(json_get letter.available)"
+check_eq "sent letter keeps the share id" "$LETTER_SHARE" "$(json_get letter.shareId)"
+
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H "X-Idempotency-Key: $LETTER_IDEM" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-letter.json")"
+check_status "idempotent letter retry -> 201" 201
+check_eq "retry returns the same letter" "$LETTER_ID" "$(json_get letter.id)"
+
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "Authorization: Bearer $SECRET_B")"
+check_status "list B letters with the owner secret -> 200" 200
+check_eq "list has the sent letter" "$LETTER_ID" "$(json_get letters.0.id)"
+check_eq "list joins the title" "Carta de teste" "$(json_get letters.0.title)"
+check_eq "list joins the sender" "Lucas" "$(json_get letters.0.sender)"
+check_eq "list marks the letter available" "true" "$(json_get letters.0.available)"
+check_body_not_contains "list never exposes the sender address" 'senderAddress'
+check_body_not_contains "list never exposes read state" 'readAt'
+
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "Authorization: Bearer $SECRET_WRONG")"
+check_status "list with the wrong secret -> 401" 401
+check_body_contains "wrong secret is unauthorized" '"error":"unauthorized"'
+
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_MISSING/letters" \
+  -H "Authorization: Bearer $SECRET_A")"
+check_status "list for a missing mailbox -> 404" 404
+
+make_send_body "$TMP/send-missing-share.json" "zzzzzzzzzzzz" "$MAILBOX_A"
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-missing-share.json")"
+check_status "send with a missing share -> 404" 404
+check_body_contains "missing share is not_found" '"error":"not_found"'
+
+make_payload "$TMP/letter-revoked.json" "Carta revogada" "1. Um passo." "Lucas"
+STATUS="$(request POST "$BASE/api/recipes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/letter-revoked.json")"
+check_status "revoked-share fixture -> 201" 201
+REVOKED_SHARE="$(json_get id)"
+STATUS="$(request DELETE "$BASE/api/recipes/$REVOKED_SHARE" \
+  -H "X-App-Key: $APP_KEY_VALUE")"
+check_status "revoke the fixture share -> 204" 204
+
+make_send_body "$TMP/send-revoked.json" "$REVOKED_SHARE" "$MAILBOX_A"
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-revoked.json")"
+check_status "send with a revoked share -> 410" 410
+check_body_contains "revoked share body is revoked" '"error":"revoked"'
+
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-letter.json")"
+check_status "send without the sender secret -> 401" 401
+
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/read" \
+  -H "Authorization: Bearer $SECRET_B" \
+  -H 'Content-Type: application/json' \
+  --data-binary '{}')"
+check_status "there is no read endpoint -> 404" 404
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_B/blocks" \
+  -H "Authorization: Bearer $SECRET_B")"
+check_status "there is no blocks endpoint -> 404" 404
+
+printf '%s' '{"token":"ExponentPushToken[smoke-test]","platform":"android"}' \
+  >"$TMP/push.json"
+STATUS="$(request PUT "$BASE/api/mailboxes/$MAILBOX_B/push" \
+  -H "Authorization: Bearer $SECRET_B" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/push.json")"
+check_status "PUT push token with the owner secret -> 204" 204
+STATUS="$(request PUT "$BASE/api/mailboxes/$MAILBOX_B/push" \
+  -H "Authorization: Bearer $SECRET_WRONG" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/push.json")"
+check_status "PUT push token with the wrong secret -> 401" 401
+
+STATUS="$(request DELETE "$BASE/api/mailboxes/$MAILBOX_B/letters/$LETTER_ID" \
+  -H "Authorization: Bearer $SECRET_B")"
+check_status "DELETE letter with the owner secret -> 204" 204
+STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_B/letters" \
+  -H "Authorization: Bearer $SECRET_B")"
+check_status "list after DELETE -> 200" 200
+check_eq "deleted letter is gone" "" "$(json_get letters.0.id)"
+
+# Per-recipient send budget: 60 letters/hour/mailbox, independent of the IP.
+make_mailbox_body "$TMP/mailbox-c.json" "$MAILBOX_C" "$SECRET_C" "Bia" \
+  '{"kind":"sigil","id":"bee"}'
+STATUS="$(request POST "$BASE/api/mailboxes" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/mailbox-c.json")"
+check_status "POST mailbox C -> 201" 201
+
+make_send_body "$TMP/send-c.json" "$LETTER_SHARE" "$MAILBOX_A"
+RATE_UNEXPECTED=""
+for i in $(seq 1 60); do
+  STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_C/letters" \
+    -H "X-App-Key: $APP_KEY_VALUE" \
+    -H "Authorization: Bearer $SECRET_A" \
+    -H 'Content-Type: application/json' \
+    --data-binary @"$TMP/send-c.json")"
+  if [ "$STATUS" != "201" ]; then
+    RATE_UNEXPECTED="$i:${STATUS:-no response}"
+    break
+  fi
+done
+check_eq "first 60 letters to one mailbox are allowed" "" "$RATE_UNEXPECTED"
+
+STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_C/letters" \
+  -H "X-App-Key: $APP_KEY_VALUE" \
+  -H "Authorization: Bearer $SECRET_A" \
+  -H 'Content-Type: application/json' \
+  --data-binary @"$TMP/send-c.json")"
+check_status "61st letter in an hour -> 429" 429
+check_body_contains "letter 429 body is rate_limited" '"error":"rate_limited"'
+check_regex "letter 429 includes a Retry-After in seconds" \
+  '^[0-9]+$' "$(header_value 'Retry-After')"
 
 echo
 echo "== Static routes =="

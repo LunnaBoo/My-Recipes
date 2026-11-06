@@ -24,7 +24,7 @@ import {
 import type { Recipe } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { fetchShare, type SharedRecipe, type ShareError } from '../../lib/api';
-import { parseSeal } from '../../lib/seal';
+import { parseSeal, sealToStored } from '../../lib/seal';
 import { isValidShareId } from '../../lib/shareLink';
 import { theme } from '../../theme';
 
@@ -48,11 +48,6 @@ function errorMessage(error: LoadError): string {
 
 function isRetryable(error: LoadError): boolean {
   return error === 'offline' || error === 'server_error';
-}
-
-/** Stores the sender seal exactly as it arrived, including a JSON `null`. */
-function sealJson(seal: unknown): string | null {
-  return seal === undefined ? null : JSON.stringify(seal);
 }
 
 export default function SharedRecipeScreen() {
@@ -126,13 +121,14 @@ export default function SharedRecipeScreen() {
     setSnackbar(null);
 
     try {
+      const seal = parseSeal(share.senderSeal);
       const created = await createRecipe({
         title: share.title,
         body: share.body,
         source: {
           shareId: id,
           name: share.sender,
-          seal: sealJson(share.senderSeal),
+          seal: seal ? sealToStored(seal) : null,
         },
       });
       router.replace(`/recipe/${created.id}?notice=saved`);

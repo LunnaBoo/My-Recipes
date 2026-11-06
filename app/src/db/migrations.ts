@@ -56,4 +56,43 @@ export const migrations: Migration[] = [
       );
     `,
   },
+  {
+    // Mailbox (MAILBOX.md §7.1). `mailbox` is a singleton; `letters` is a cache
+    // of the server list plus the local read state, which never leaves the
+    // device. The sender address is not stored, matching the server.
+    version: 3,
+    sql: `
+      CREATE TABLE IF NOT EXISTS mailbox (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        address TEXT NOT NULL,
+        secret TEXT NOT NULL,
+        registered_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS contacts (
+        id TEXT PRIMARY KEY NOT NULL,
+        mailbox_address TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        seal_json TEXT,
+        created_at INTEGER NOT NULL,
+        last_sent_at INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS letters (
+        letter_id TEXT PRIMARY KEY NOT NULL,
+        share_id TEXT NOT NULL,
+        title TEXT,
+        step_count INTEGER,
+        sender_name TEXT,
+        sender_seal TEXT,
+        sent_at INTEGER NOT NULL,
+        read_at INTEGER,
+        available INTEGER NOT NULL DEFAULT 1,
+        received_at INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_letters_sent_at ON letters(sent_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_letters_read_at ON letters(read_at);
+    `,
+  },
 ];

@@ -49,7 +49,6 @@ export type UpdateRecipeInput = {
 export type ImportedRecipeInput = {
   id: string;
   title: string;
-  stepCount: number;
   createdAt: number;
   updatedAt: number;
   pinned: number;
@@ -77,4 +76,42 @@ export type ShareRecord = {
   recipe_id: string;
   published_at: number;
   revoked_at: number | null;
+};
+
+/** Local mailbox identity singleton (`mailbox` table, `id = 1`). */
+export type Mailbox = {
+  address: string;
+  secret: string;
+  registeredAt: number;
+};
+
+export type ContactRow = {
+  id: string;
+  mailbox_address: string;
+  display_name: string;
+  seal_json: string | null;
+  created_at: number;
+  last_sent_at: number | null;
+};
+
+/** Cached server letter plus the local read state (`read_at`). */
+export type LetterRow = {
+  letter_id: string;
+  share_id: string;
+  title: string | null;
+  step_count: number | null;
+  sender_name: string | null;
+  sender_seal: string | null;
+  sent_at: number;
+  read_at: number | null;
+  available: number;
+  received_at: number;
+};
+
+export type AddContactInput = {
+  address: string;
+  displayName: string;
+  sealJson?: string | null;
+  createdAt?: number;
+  lastSentAt?: number | null;
 };

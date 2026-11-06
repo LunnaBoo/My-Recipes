@@ -9,6 +9,16 @@
       "id": "c4c5e398294146cdb924d67f07895d4d"
     }
   ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "RATE_LIMITER", "class_name": "RateLimiter" },
+      { "name": "MAILBOXES", "class_name": "Mailbox" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["RateLimiter"] },
+    { "tag": "v2", "new_sqlite_classes": ["Mailbox"] }
+  ],
   "routes": [
     { "pattern": "r.lunna.boo", "custom_domain": true }
   ],

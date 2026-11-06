@@ -196,7 +196,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
   - `Todas | Fixadas` filter row.
   - Scrollable list of rows.
 - FAB: circular Olive Tab button with a simple plus, anchored bottom-right above safe area.
-- Long-press on a row opens a context menu: Compartilhar, Fixar, Editar, Excluir.
+- Long-press on a row opens a context menu: Fixar, Editar, Excluir.
 
 ### 5.2 Recipe view
 
@@ -260,7 +260,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 - Tab "Ajustes" folder is Tan Tab.
 - Grouped list on parchment, section headers in uppercase serif.
-- Fields: Nome de exibição, Seu selo, Exportar backup, Importar backup, Verificar atualização, Apagar tudo.
+- Fields: Nome de exibição, Seu selo, Exportar backup, Importar backup, Verificar atualização.
 - Version info at bottom in Meta style.
 
 ### 5.8 Seu selo

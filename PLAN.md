@@ -10,8 +10,10 @@ Last updated: 2026-11-06
 **Infrastructure**
 - Worker on `r.lunna.boo`: `POST/GET/PUT/DELETE /api/recipes/:id`, `/r/:id` share page,
   `/` install page, `/.well-known/assetlinks.json`, `/app/latest.apk`, `/app/version.json`,
-  `/assets/page.js`, `robots.txt`. 148 smoke assertions passing.
-- KV storage, HTTPS-only redirect, rate caps in code, real keystore fingerprint published.
+  `/assets/page.js`, `robots.txt`. 212 smoke assertions passing.
+- KV storage, HTTPS-only redirect, per-IP Durable Object write limit (20 writes/hour),
+  hardened response headers (CSP `frame-ancestors`, `X-Frame-Options`, `Permissions-Policy`),
+  real keystore fingerprint published.
 - Domain confirmed on Cloudflare Registrar (auto-renew, expires 2027-05-07).
 
 **App (v1 build, versionCode 1)**
@@ -61,7 +63,7 @@ Shipped across `1.3.0` and `1.4.0`; the unchecked items below move to a later bu
 - [x] Six bundled photographic wax stamps replacing the line-art sigils (WebP, alpha, real
       silhouettes); legacy sigils still render.
 - [ ] Drop x86 ABIs to roughly halve the 100 MB APK.
-- [ ] Cloudflare edge rate-limit rule on `POST /api/recipes` (spec: 20 writes/hour/IP).
+- [x] Write rate limit: 20 writes/hour/IP via a per-IP Durable Object counter (SPEC §5).
 - [ ] `og:image` static card for link previews.
 - [ ] Serve the APK from the Worker/R2 instead of redirecting to GitHub, if Releases ever
       becomes a constraint.
@@ -83,7 +85,7 @@ Decision: **the launcher icon never changes.** One icon, one identity. Theme aff
 in-app look only — no `activity-alias` icon switching, no app restart on theme change.
 
 ### v3 progress notes
-- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 148 smoke assertions.
+- Worker seal support is **deployed**: `senderSeal` validated, stored, re-checked on read, rendered as a stamp, legacy sigil, or circular photo. 212 smoke assertions.
 - App backup/import + trash shipped in `d4acf80` (55 tests).
 - All v3 features are implemented and released as 1.2.0 (versionCode 3) on 2026-11-05.
 

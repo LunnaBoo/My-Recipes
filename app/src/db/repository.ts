@@ -110,6 +110,10 @@ export async function createRecipe(input: CreateRecipeInput): Promise<Recipe> {
  */
 export async function insertImportedRecipe(input: ImportedRecipeInput): Promise<boolean> {
   const db = await getDb();
+  // The body is the source of truth for both the size cap and the step count:
+  // an archive cannot raise the limit or fake `step_count`.
+  assertBody(input.body);
+  const steps = stepCount(input.body);
   const filePath = bodyFilePath(input.id);
   let inserted = false;
 
@@ -124,7 +128,7 @@ export async function insertImportedRecipe(input: ImportedRecipeInput): Promise<
         input.id,
         input.title,
         filePath,
-        input.stepCount,
+        steps,
         input.createdAt,
         input.updatedAt,
         input.sourceShareId,

@@ -242,8 +242,10 @@ Deterrent, not real security — accepted, since the worst case is KV spam.
 Behavior details:
 - `POST` is idempotent per client attempt via optional `X-Idempotency-Key`; a retried share
   returns the existing id instead of creating a duplicate.
-- Rate limit: one Cloudflare rate-limiting rule on `POST /api/recipes` (20 writes/hour/IP).
-  Enforced at the edge, not in code — KV counters are eventually consistent and would lie.
+- Rate limit: 20 writes/hour/IP on `POST /api/recipes`, enforced by a per-IP Durable Object
+  counter. KV counters are eventually consistent and would undercount, so the DO serializes
+  the window instead. Requests without a `CF-Connecting-IP` (local dev, smoke tests) are not
+  limited.
 - `GET /r/:id` sets `X-Robots-Tag: noindex, nofollow`; `/robots.txt` disallows everything.
 - Headers: `Cache-Control: private, max-age=300` on HTML, `no-store` on JSON.
 - Errors: `{error: "not_found" | "revoked" | "too_large" | "unauthorized"}`.
@@ -291,7 +293,7 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 ### 6.1 Recipe list (home)
 - Search bar (title + body, debounced, SQLite FTS5).
 - Filter row: **Todas** / **Fixadas** — two segments, no tag chips.
-- Cards: title, first body line, "N passos", pin indicator; long-press → share/delete.
+- Cards: title, first body line, "N passos", pin indicator; long-press → pin/edit/delete.
 - FAB opens two actions: **Nova receita** and **Colar receita**.
 - Header menu: Lixeira, Ajustes.
 - Empty state: "Nenhuma receita ainda. Cole sua primeira."
@@ -368,7 +370,7 @@ normalized markdown is what gets stored.
   re-encode to 256×256 JPEG). A live preview shows the seal as it will appear on shares.
 - Export backup (zip) / Import backup.
 - Check for updates → compares `version.json`, offers the APK link.
-- App version, share-domain info, "Apagar tudo" (double confirm).
+- App version and share-domain info.
 - No share management / revoke UI in v1.
 
 ---

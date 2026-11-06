@@ -1,7 +1,8 @@
 import { renderInstallPage, renderErrorPage, renderSharePage } from "./page";
-import type { Recipe } from "./util";
+import type { Recipe, SenderSeal } from "./util";
 import {
   byteLength,
+  charLength,
   countSteps,
   generateId,
   isValidId,
@@ -10,9 +11,16 @@ import {
   validateRecipeInput,
   validateSeal,
 } from "./util";
+import { hashSecret, isValidSecret } from "./mailbox";
+import type { Letter, MailboxProfile } from "./mailbox";
+
+export { RateLimiter } from "./rateLimiter";
+export { Mailbox } from "./mailbox";
 
 export interface Env {
   RECIPES: KVNamespace;
+  RATE_LIMITER: DurableObjectNamespace;
+  MAILBOXES: DurableObjectNamespace;
   APP_KEY?: string;
   ASSETLINKS_JSON?: string;
   APK_URL?: string;
@@ -22,15 +30,24 @@ export interface Env {
 
 const CSP =
   "default-src 'none'; style-src 'unsafe-inline'; img-src data:; " +
-  "script-src 'self'; base-uri 'none'; form-action 'none'";
+  "script-src 'self'; base-uri 'none'; form-action 'none'; " +
+  "frame-ancestors 'none'";
 
 const BASE_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
+  "X-Frame-Options": "DENY",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+  "Cross-Origin-Opener-Policy": "same-origin",
 };
 
 const IDEMPOTENCY_TTL_SECONDS = 86400;
 const TOMBSTONE_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+// Send retries are keyed by the client's X-Idempotency-Key. The stored value
+// keeps the letter plus the recipient address so a retry can answer without
+// writing a second letter (MAILBOX.md §6.2).
+const MAILBOX_IDEM_PREFIX = "idem:letter:";
 
 // Upper bound for the raw request body (the validator enforces the tighter
 // per-field limits) and for the serialized KV value.
@@ -143,6 +160,31 @@ function isAuthorized(request: Request, env: Env): boolean {
   return timingSafeEqual(provided, expected);
 }
 
+// Local `wrangler dev` and the smoke tests do not present a real client IP.
+const LOOPBACK_IPS = new Set(["127.0.0.1", "::1", "localhost"]);
+
+/**
+ * Enforce the write budget (20 writes/hour/IP) before doing any KV work.
+ * Returns a ready 429 response when the caller is over budget, else null.
+ * Requests without a usable client IP (local dev, tests) are not limited.
+ */
+async function checkWriteRateLimit(
+  request: Request,
+  env: Env,
+): Promise<Response | null> {
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (!ip || LOOPBACK_IPS.has(ip)) return null;
+
+  const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName(ip));
+  const response = await stub.fetch("https://rate-limit/check");
+  if (response.status !== 429) return null;
+
+  const retryAfter = response.headers.get("Retry-After") ?? "60";
+  return jsonResponse({ error: "rate_limited" }, 429, {
+    "Retry-After": retryAfter,
+  });
+}
+
 type Lookup =
   | { kind: "ok"; recipe: Recipe }
   | { kind: "revoked" }
@@ -217,6 +259,44 @@ type BodyParse =
   | { ok: false; status: 400 | 413 };
 
 /**
+ * Read the request body without ever buffering more than `max` bytes.
+ * `Content-Length` is checked first, but a chunked request can omit it; the
+ * streaming cap keeps a hostile body from filling the isolate's memory.
+ * Returns null when the body exceeds the cap or cannot be read.
+ */
+async function readTextCapped(
+  request: Request,
+  max: number,
+): Promise<string | null> {
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = "";
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      total += value.byteLength;
+      if (total > max) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+
+    return text + decoder.decode();
+  } catch {
+    await reader.cancel().catch(() => {});
+    return null;
+  }
+}
+
+/**
  * Read and validate a create/update body. Mirrors the original POST rules:
  * oversized requests are 413, malformed JSON or shapes are 400.
  */
@@ -229,11 +309,9 @@ async function parseRecipeBody(request: Request): Promise<BodyParse> {
     return { ok: false, status: 413 };
   }
 
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return { ok: false, status: 400 };
+  const rawBody = await readTextCapped(request, MAX_REQUEST_BYTES);
+  if (rawBody === null) {
+    return { ok: false, status: 413 };
   }
 
   if (byteLength(rawBody) > MAX_REQUEST_BYTES) {
@@ -271,6 +349,9 @@ async function handleCreate(
   if (!isAuthorized(request, env)) {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
+
+  const limited = await checkWriteRateLimit(request, env);
+  if (limited) return limited;
 
   const idempotencyKey = request.headers.get("X-Idempotency-Key");
   if (idempotencyKey && idempotencyKey.length > 128) {
@@ -400,6 +481,520 @@ async function handleDelete(
   return new Response(null, { status: 204, headers: BASE_HEADERS });
 }
 
+/* ------------------------------------------------------------------ *
+ * Mailboxes (MAILBOX.md §6). One Durable Object per address; the DO
+ * stores only `{ id, shareId, sentAt }` per letter and the display
+ * fields are joined from `r:<shareId>` here, for the owner only.
+ * ------------------------------------------------------------------ */
+
+type JsonBody =
+  | { ok: true; value: Record<string, unknown> }
+  | { ok: false; status: 400 | 413 };
+
+type LetterView = Letter & {
+  title?: string;
+  stepCount?: number;
+  sender?: string;
+  senderSeal?: SenderSeal;
+  available: boolean;
+};
+
+type ProfileParse =
+  | { ok: true; name: string; seal: SenderSeal | null }
+  | { ok: false; status: 400 | 413 };
+
+function mailboxStub(env: Env, address: string): DurableObjectStub {
+  return env.MAILBOXES.get(env.MAILBOXES.idFromName(`mailbox:${address}`));
+}
+
+/** `Authorization: Bearer <secret>` — the mailbox owner token. */
+function bearerSecret(request: Request): string {
+  const header = request.headers.get("Authorization") ?? "";
+  const match = /^Bearer[ \t]+(\S+)$/i.exec(header);
+  return match?.[1] ?? "";
+}
+
+async function readJsonBody(request: Request): Promise<JsonBody> {
+  const declaredLength = Number(request.headers.get("Content-Length") ?? "0");
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+    return { ok: false, status: 413 };
+  }
+  const raw = await readTextCapped(request, MAX_REQUEST_BYTES);
+  if (raw === null || byteLength(raw) > MAX_REQUEST_BYTES) {
+    return { ok: false, status: 413 };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, status: 400 };
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return { ok: false, status: 400 };
+  }
+  return { ok: true, value: parsed as Record<string, unknown> };
+}
+
+function isStoredLetter(value: unknown): value is Letter {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === "string" &&
+    typeof record.shareId === "string" &&
+    typeof record.sentAt === "number"
+  );
+}
+
+function parseMailboxProfile(value: Record<string, unknown>): ProfileParse {
+  if (typeof value.name !== "string") return { ok: false, status: 400 };
+  const name = value.name.trim();
+  if (charLength(name) > 40) return { ok: false, status: 400 };
+
+  const seal = validateSeal(value.seal);
+  if (!seal.ok) return { ok: false, status: seal.status };
+
+  return { ok: true, name, seal: seal.value ?? null };
+}
+
+/** Public projection of a mailbox: name and seal, never the secret hash. */
+async function readMailboxProfile(
+  env: Env,
+  address: string,
+): Promise<MailboxProfile | null> {
+  const response = await mailboxStub(env, address).fetch("https://mailbox/meta");
+  if (response.status !== 200) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = await response.json();
+  } catch {
+    return null;
+  }
+  if (parsed === null || typeof parsed !== "object") return null;
+
+  const record = parsed as Record<string, unknown>;
+  if (typeof record.name !== "string") return null;
+  const seal = validateSeal(record.seal);
+  return { name: record.name, seal: seal.ok ? (seal.value ?? null) : null };
+}
+
+/**
+ * Owner gate for the recipient's own routes. Returns a ready response when the
+ * request is not allowed, else null. A missing mailbox is 404; a wrong secret
+ * is 401, so the app can tell the two apart.
+ */
+async function requireOwner(
+  request: Request,
+  env: Env,
+  address: string,
+): Promise<Response | null> {
+  if (!isValidId(address)) return jsonResponse({ error: "not_found" }, 404);
+
+  const secret = bearerSecret(request);
+  if (!isValidSecret(secret)) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+  const stub = mailboxStub(env, address);
+  const meta = await stub.fetch("https://mailbox/meta");
+  if (meta.status === 404) return jsonResponse({ error: "not_found" }, 404);
+  if (meta.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  const verified = await stub.fetch("https://mailbox/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret }),
+  });
+  if (verified.status === 200) return null;
+  return jsonResponse({ error: "unauthorized" }, 401);
+}
+
+/**
+ * Add the display fields the recipient sees. The stored letter stays
+ * `{ id, shareId, sentAt }`; a missing or revoked share is simply
+ * `available: false` with no display fields (the app keeps its cache).
+ */
+async function joinLetter(env: Env, letter: Letter): Promise<LetterView> {
+  const lookup = await lookupRecipe(env, letter.shareId);
+  if (lookup.kind !== "ok") {
+    return {
+      id: letter.id,
+      shareId: letter.shareId,
+      sentAt: letter.sentAt,
+      available: false,
+    };
+  }
+  return {
+    id: letter.id,
+    shareId: letter.shareId,
+    sentAt: letter.sentAt,
+    title: lookup.recipe.title,
+    stepCount: lookup.recipe.stepCount,
+    sender: lookup.recipe.sender,
+    senderSeal: lookup.recipe.senderSeal,
+    available: true,
+  };
+}
+
+async function handleMailboxCreate(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  if (!isAuthorized(request, env)) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+  const limited = await checkWriteRateLimit(request, env);
+  if (limited) return limited;
+
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return bodyErrorResponse(parsed.status);
+  const body = parsed.value;
+
+  const address = body.address;
+  if (typeof address !== "string" || !isValidId(address)) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const secret = body.secret;
+  if (typeof secret !== "string" || !isValidSecret(secret)) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const profile = parseMailboxProfile(body);
+  if (!profile.ok) return bodyErrorResponse(profile.status);
+
+  const secretHash = await hashSecret(secret);
+  const stub = mailboxStub(env, address);
+  const created = await stub.fetch("https://mailbox/init", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      address,
+      secretHash,
+      name: profile.name,
+      seal: profile.seal,
+    }),
+  });
+
+  if (created.status === 201) return jsonResponse({ address }, 201);
+
+  if (created.status === 409) {
+    // Same address + same secret hash is an idempotent retry. A different
+    // secret means the address is taken; the app retries with a new one.
+    const verified = await stub.fetch("https://mailbox/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret }),
+    });
+    if (verified.status === 200) return jsonResponse({ address }, 200);
+    return jsonResponse({ error: "address_taken" }, 409);
+  }
+
+  return jsonResponse({ error: "server_error" }, 500);
+}
+
+async function handleMailboxProfile(
+  env: Env,
+  address: string,
+): Promise<Response> {
+  if (!isValidId(address)) return jsonResponse({ error: "not_found" }, 404);
+  const profile = await readMailboxProfile(env, address);
+  if (!profile) return jsonResponse({ error: "not_found" }, 404);
+  return jsonResponse(profile, 200);
+}
+
+async function handleMailboxUpdate(
+  request: Request,
+  env: Env,
+  address: string,
+): Promise<Response> {
+  const denied = await requireOwner(request, env, address);
+  if (denied) return denied;
+
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return bodyErrorResponse(parsed.status);
+
+  const profile = parseMailboxProfile(parsed.value);
+  if (!profile.ok) return bodyErrorResponse(profile.status);
+
+  const response = await mailboxStub(env, address).fetch("https://mailbox/meta", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: profile.name, seal: profile.seal }),
+  });
+  if (response.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  return jsonResponse({ address, name: profile.name, seal: profile.seal }, 200);
+}
+
+async function handleMailboxPush(
+  request: Request,
+  env: Env,
+  address: string,
+): Promise<Response> {
+  const denied = await requireOwner(request, env, address);
+  if (denied) return denied;
+
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return bodyErrorResponse(parsed.status);
+
+  const token =
+    typeof parsed.value.token === "string" ? parsed.value.token.trim() : "";
+  if (token.length < 1 || token.length > 512) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+  const platform =
+    typeof parsed.value.platform === "string"
+      ? parsed.value.platform.trim()
+      : "";
+  if (platform.length < 1 || platform.length > 32) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const response = await mailboxStub(env, address).fetch("https://mailbox/push", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, platform }),
+  });
+  if (response.status !== 204) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  return new Response(null, { status: 204, headers: BASE_HEADERS });
+}
+
+async function handleMailboxList(
+  request: Request,
+  env: Env,
+  url: URL,
+  address: string,
+): Promise<Response> {
+  const denied = await requireOwner(request, env, address);
+  if (denied) return denied;
+
+  const params = new URLSearchParams();
+  const before = url.searchParams.get("before");
+  if (before) params.set("before", before);
+  const limit = url.searchParams.get("limit");
+  if (limit) params.set("limit", limit);
+  const query = params.toString();
+
+  const response = await mailboxStub(env, address).fetch(
+    `https://mailbox/letters${query ? `?${query}` : ""}`,
+  );
+  if (response.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = await response.json();
+  } catch {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+  if (parsed === null || typeof parsed !== "object") {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  const stored = (parsed as Record<string, unknown>).letters;
+  const letters = Array.isArray(stored) ? stored.filter(isStoredLetter) : [];
+  const views = await Promise.all(
+    letters.map((letter) => joinLetter(env, letter)),
+  );
+
+  return jsonResponse({ letters: views }, 200);
+}
+
+function parseIdemLetter(
+  raw: string | null,
+): { address: string; letter: Letter } | null {
+  if (!raw) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (parsed === null || typeof parsed !== "object") return null;
+
+  const record = parsed as Record<string, unknown>;
+  if (typeof record.address !== "string" || !isStoredLetter(record.letter)) {
+    return null;
+  }
+  return { address: record.address, letter: record.letter };
+}
+
+async function readAppendedLetter(response: Response): Promise<Letter | null> {
+  let parsed: unknown;
+  try {
+    parsed = await response.json();
+  } catch {
+    return null;
+  }
+  if (parsed === null || typeof parsed !== "object") return null;
+  const letter = (parsed as Record<string, unknown>).letter;
+  return isStoredLetter(letter) ? letter : null;
+}
+
+async function handleMailboxSend(
+  request: Request,
+  env: Env,
+  address: string,
+): Promise<Response> {
+  if (!isAuthorized(request, env)) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+  const limited = await checkWriteRateLimit(request, env);
+  if (limited) return limited;
+
+  const parsed = await readJsonBody(request);
+  if (!parsed.ok) return bodyErrorResponse(parsed.status);
+  const body = parsed.value;
+
+  const shareId = body.shareId;
+  if (typeof shareId !== "string" || !isValidId(shareId)) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const senderAddress = body.senderAddress;
+  if (typeof senderAddress !== "string" || !isValidId(senderAddress)) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const idempotencyKey = request.headers.get("X-Idempotency-Key") ?? "";
+  if (idempotencyKey.length > 128) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  // The sender proves ownership of `senderAddress` with their own secret. The
+  // app key alone is not enough to spoof a sender.
+  const secret = bearerSecret(request);
+  if (!isValidSecret(secret)) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+  const senderStub = mailboxStub(env, senderAddress);
+  const senderMeta = await senderStub.fetch("https://mailbox/meta");
+  if (senderMeta.status === 404) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+  if (senderMeta.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+  const senderVerified = await senderStub.fetch("https://mailbox/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret }),
+  });
+  if (senderVerified.status !== 200) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
+  // A retry with the same key returns the letter the first attempt created.
+  if (idempotencyKey) {
+    const stored = await env.RECIPES.get(
+      `${MAILBOX_IDEM_PREFIX}${idempotencyKey}`,
+    );
+    const existing = parseIdemLetter(stored);
+    if (existing && existing.address === address) {
+      return jsonResponse(
+        { letter: await joinLetter(env, existing.letter) },
+        201,
+      );
+    }
+  }
+
+  const recipientMeta = await mailboxStub(env, address).fetch(
+    "https://mailbox/meta",
+  );
+  if (recipientMeta.status === 404) {
+    return jsonResponse({ error: "not_found" }, 404);
+  }
+  if (recipientMeta.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  const lookup = await lookupRecipe(env, shareId);
+  if (lookup.kind === "revoked") {
+    return jsonResponse({ error: "revoked" }, 410);
+  }
+  if (lookup.kind === "missing") {
+    return jsonResponse({ error: "not_found" }, 404);
+  }
+
+  const appended = await mailboxStub(env, address).fetch(
+    "https://mailbox/letters",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shareId }),
+    },
+  );
+
+  if (appended.status === 409) {
+    return jsonResponse({ error: "mailbox_full" }, 409);
+  }
+  if (appended.status === 429) {
+    return jsonResponse({ error: "rate_limited" }, 429, {
+      "Retry-After": appended.headers.get("Retry-After") ?? "60",
+    });
+  }
+  if (appended.status !== 201) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  const letter = await readAppendedLetter(appended);
+  if (!letter) return jsonResponse({ error: "server_error" }, 500);
+
+  if (idempotencyKey) {
+    try {
+      await env.RECIPES.put(
+        `${MAILBOX_IDEM_PREFIX}${idempotencyKey}`,
+        JSON.stringify({ address, letter }),
+        { expirationTtl: IDEMPOTENCY_TTL_SECONDS },
+      );
+    } catch (error) {
+      // The letter is safely stored; idempotency is best-effort.
+      console.error("failed to store letter idempotency key", error);
+    }
+  }
+
+  return jsonResponse({ letter: await joinLetter(env, letter) }, 201);
+}
+
+async function handleMailboxDeleteLetter(
+  request: Request,
+  env: Env,
+  address: string,
+  letterId: string,
+): Promise<Response> {
+  const denied = await requireOwner(request, env, address);
+  if (denied) return denied;
+
+  if (letterId.length < 1 || letterId.length > 64) {
+    return jsonResponse({ error: "invalid" }, 400);
+  }
+
+  const response = await mailboxStub(env, address).fetch(
+    `https://mailbox/letters/${encodeURIComponent(letterId)}`,
+    { method: "DELETE" },
+  );
+  if (response.status !== 204 && response.status !== 200) {
+    return jsonResponse({ error: "server_error" }, 500);
+  }
+
+  return new Response(null, { status: 204, headers: BASE_HEADERS });
+}
+
 async function handleSharePage(
   request: Request,
   env: Env,
@@ -477,7 +1072,7 @@ function handleApk(env: Env): Response {
   } catch {
     return textResponse("APK indisponível.\n", 404);
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+  if (parsed.protocol !== "https:") {
     return textResponse("APK indisponível.\n", 404);
   }
 
@@ -489,7 +1084,7 @@ function apkConfigured(env: Env): boolean {
   if (!target) return false;
   try {
     const parsed = new URL(target);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    return parsed.protocol === "https:";
   } catch {
     return false;
   }
@@ -506,6 +1101,14 @@ function handleRoot(env: Env): Response {
   );
 }
 
+function decodeSegment(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 async function handleRoute(
   request: Request,
   env: Env,
@@ -513,6 +1116,43 @@ async function handleRoute(
   path: string,
   method: string,
 ): Promise<Response> {
+  if (path === "/api/mailboxes" && method === "POST") {
+    return await handleMailboxCreate(request, env);
+  }
+
+  const mailboxProfile = /^\/api\/mailboxes\/([^/]+)\/profile$/.exec(path);
+  if (mailboxProfile && method === "GET") {
+    return await handleMailboxProfile(env, decodeSegment(mailboxProfile[1] ?? ""));
+  }
+
+  const mailboxLetters = /^\/api\/mailboxes\/([^/]+)\/letters$/.exec(path);
+  if (mailboxLetters) {
+    const address = decodeSegment(mailboxLetters[1] ?? "");
+    if (method === "GET") return await handleMailboxList(request, env, url, address);
+    if (method === "POST") return await handleMailboxSend(request, env, address);
+  }
+
+  const mailboxLetter =
+    /^\/api\/mailboxes\/([^/]+)\/letters\/([^/]+)$/.exec(path);
+  if (mailboxLetter && method === "DELETE") {
+    return await handleMailboxDeleteLetter(
+      request,
+      env,
+      decodeSegment(mailboxLetter[1] ?? ""),
+      decodeSegment(mailboxLetter[2] ?? ""),
+    );
+  }
+
+  const mailboxPush = /^\/api\/mailboxes\/([^/]+)\/push$/.exec(path);
+  if (mailboxPush && method === "PUT") {
+    return await handleMailboxPush(request, env, decodeSegment(mailboxPush[1] ?? ""));
+  }
+
+  const mailboxMeta = /^\/api\/mailboxes\/([^/]+)$/.exec(path);
+  if (mailboxMeta && method === "PUT") {
+    return await handleMailboxUpdate(request, env, decodeSegment(mailboxMeta[1] ?? ""));
+  }
+
   if (path === "/api/recipes" && method === "POST") {
     return await handleCreate(request, env, url.origin);
   }

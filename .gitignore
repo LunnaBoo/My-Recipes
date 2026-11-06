@@ -53,3 +53,6 @@ keystore-password.txt
 
 # local staging (source images, not shipped)
 incoming/
+
+# deepwork scratch
+.slim/deepwork/
