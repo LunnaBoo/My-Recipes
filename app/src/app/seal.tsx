@@ -382,6 +382,8 @@ const styles = StyleSheet.create({
   sigilCell: {
     width: '31%',
     aspectRatio: 1,
+    minHeight: 88,
+    padding: theme.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.radii.lg,

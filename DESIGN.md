@@ -128,7 +128,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 - A decorative wax identity for each sender. It is **never load-bearing for meaning**: the sender name is always shown as text, and the seal is an ornament that makes shared recipes feel personal.
 - **Sizes:**
-  - **Large (92px):** import-preview letter, centered above `"Receita de <sender>"`.
+  - **Large (108px):** import-preview letter, centered above `"Receita de <sender>"`.
   - **Small (28px):** recipe-view meta line, settings row, inline before `"Carta de <sender>"`.
   - **Grid (56px):** the six built-in stamps in the "Seu selo" picker.
   - **Preview (110px):** top-of-screen seal preview on "Seu selo".
@@ -227,7 +227,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - Designed to feel like receiving a letter.
 - Background: Leafy Green with a faint parchment letter overlay.
 - A sealed scroll/card at center:
-  - Large Navy wax-seal (92px) above "Receita de <sender>". The mockup demonstrates a custom photo inside the seal rim.
+  - Large Navy wax-seal (108px) above "Receita de <sender>". The mockup demonstrates a custom photo inside the seal rim.
   - Title (clamped to 2 lines), step count, rendered body.
 - Bottom sticky bar: "Salvar" (primary) / "Descartar" (secondary, Maroon outline).
 - Already-imported state shows a notice and "Ver receita" / "Atualizar cópia" actions.
