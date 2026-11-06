@@ -192,7 +192,8 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - Panel: Parchment, full-width with 16px margins, rough top edge.
 - Inside panel:
   - Search field (Cream, rounded, placeholder "Buscar receitas…").
-  - Section header "RECEITAS" with flourish.
+  - Section header "RECEITAS" with flourish, flanked by two small `IvyCorner` branches in the band between the search field and the filter control.
+  - `Todas | Fixadas` filter row.
   - Scrollable list of rows.
 - FAB: circular Olive Tab button with a simple plus, anchored bottom-right above safe area.
 - Long-press on a row opens a context menu: Compartilhar, Fixar, Editar, Excluir.

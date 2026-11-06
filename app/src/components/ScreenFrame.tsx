@@ -11,8 +11,8 @@ type ScreenFrameProps = {
   panelStyle?: StyleProp<ViewStyle>;
   /** Folder tabs are only passed by the three tab-root screens. */
   tabs?: ReactNode;
-  /** Top corners for list screens; diagonal for reading screens. */
-  corners?: 'top' | 'diagonal' | 'none';
+  /** Top corners for list screens; diagonal for reading screens; side ivy for the home list header band. */
+  corners?: 'top' | 'diagonal' | 'none' | 'side';
 };
 
 /**
@@ -36,7 +36,12 @@ export function ScreenFrame({
         {tabs ? <View style={styles.tabs}>{tabs}</View> : null}
 
         <View style={[styles.panel, panelStyle]}>
-          {corners !== 'none' ? (
+          {corners === 'side' ? (
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <IvyCorner style={styles.ivySideLeft} />
+              <IvyCorner flipX style={styles.ivySideRight} />
+            </View>
+          ) : corners !== 'none' ? (
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
               <IvyCorner style={styles.ivyTopLeft} />
               {corners === 'top' ? (
@@ -47,7 +52,7 @@ export function ScreenFrame({
             </View>
           ) : null}
 
-          <View style={styles.content}>{children}</View>
+          <View style={[styles.content, corners === 'side' && styles.contentSide]}>{children}</View>
 
           <PanelEdge edge="top" />
           <PanelEdge edge="bottom" />
@@ -91,6 +96,11 @@ const styles = StyleSheet.create({
     paddingTop: 42,
     zIndex: 2,
   },
+  contentSide: {
+    // The side-ivy variant keeps the branches in the header band; only the
+    // 12 dp panel-edge overlay needs to be cleared.
+    paddingTop: 16,
+  },
   ivyTopLeft: {
     top: 4,
     left: 4,
@@ -105,6 +115,18 @@ const styles = StyleSheet.create({
   },
   ivyBottomRight: {
     bottom: 4,
+    right: 4,
+    width: 36,
+    height: 36,
+  },
+  ivySideLeft: {
+    top: 90,
+    left: 4,
+    width: 36,
+    height: 36,
+  },
+  ivySideRight: {
+    top: 90,
     right: 4,
     width: 36,
     height: 36,

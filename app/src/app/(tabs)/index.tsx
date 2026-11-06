@@ -215,7 +215,7 @@ export default function RecipeListScreen() {
   );
 
   return (
-    <ScreenFrame corners="top" tabs={<FolderTabs active="recipes" trashCount={trashCount} />}>
+    <ScreenFrame corners="side" tabs={<FolderTabs active="recipes" trashCount={trashCount} />}>
       <View style={styles.header}>
         <SearchField onChangeText={setQuery} value={query} />
         <SectionHeader title={ptBR.recipesHeader} />
