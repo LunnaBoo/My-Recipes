@@ -39,6 +39,8 @@ Locked decisions:
 - **No dead links:** if the app isn't installed (or App Links fails), the same URL renders the
   recipe as a readable web page with an install link and a "copy recipe" button.
 - Never lose data: trash with restore, export/import backup, survive app reinstall.
+- Send a recipe directly to a contact's in-app **Cartas** mailbox (v1.5); read state stays
+  on the phone. Push notifications are phase 2.
 - Ship as a signed APK; updates are a link, not a store.
 
 ### v1 non-goals
@@ -81,6 +83,10 @@ Why a Worker instead of a static host:
 - Short links (`/r/abc123`) need server state; KV is enough.
 - The same deploy serves the APK and `version.json`, so updates need no extra service.
 - The `/r/:id` page is the web fallback, so one URL covers both audiences.
+
+v1.5 adds a per-mailbox Durable Object and `/api/mailboxes/*` routes for in-app letters.
+The recipe body still lives in KV; the mailbox stores only `{letterId, shareId, sentAt}`
+(P1). See `MAILBOX.md`.
 
 ### 2.1 One URL, two behaviors (no redirect)
 
@@ -151,6 +157,9 @@ Remaining setup, all in one place:
 | recipe_id | TEXT | FK |
 | published_at | INTEGER | |
 | revoked_at | INTEGER NULL | |
+
+v1.5 adds `mailbox` (singleton identity), `contacts`, and `letters` (local cache + read
+state); see `MAILBOX.md` §7.1.
 
 On disk:
 ```
@@ -238,6 +247,10 @@ Deterrent, not real security — accepted, since the worst case is KV spam.
 | GET | `/app/version.json` | none | `{versionCode, versionName, url, notes, sha256}` |
 | GET | `/app/latest.apk` | none | the APK |
 | GET | `/` | none | install page (QR deferred until an APK exists) |
+
+v1.5 mailbox routes: `POST /api/mailboxes`, `GET/PUT /api/mailboxes/:address`,
+`GET .../profile`, `PUT .../push`, `GET/POST .../letters`, `DELETE .../letters/:id`.
+See `MAILBOX.md` §6.2.
 
 Behavior details:
 - `POST` is idempotent per client attempt via optional `X-Idempotency-Key`; a retried share
@@ -424,8 +437,10 @@ normalized markdown is what gets stored.
 
 - Shares are **unlisted, not private**: anyone with the link can read the recipe. Random 12-char
   ids make guessing impractical, but the link is a bearer token. Say so in the app's about text.
-- No personal data on the server beyond an optional first name.
-- No analytics, no third-party SDKs.
+- The server stores an optional display name/seal, the mailbox address and a secret hash, the
+  letter index (`{letterId, shareId, sentAt}`), and push tokens (phase 2). Recipe bodies stay
+  in the share KV; the mailbox does not copy them. Read state stays on the phone (P1).
+- No analytics. Phase 2 push will use Expo/FCM; no other third-party SDKs.
 - Seals: built-in ids come from a fixed allowlist; uploaded seals are capped at 32 KB, magic-byte
   checked, and served with a server-chosen `Content-Type` plus `nosniff`. SVG is never accepted.
 - The write key is compiled into the APK and extractable. Accepted: abuse risk is KV spam,
@@ -437,8 +452,9 @@ normalized markdown is what gets stored.
 
 ## 9. Backup, updates, and data safety
 
-- Export: zip containing `recipe-index.json` + `recipes/*.md` (trash excluded). Import merges by
-  id and reports conflicts.
+- Export: zip containing `recipe-index.json` + `recipes/*.md` (trash excluded), plus optional
+  `profile.json`, `mailbox-state.json`, and `contacts.json` (v1.5). Import merges by id and
+  reports conflicts; mailbox identity restores only on a fresh install.
 - Android auto-backup enabled (`allowBackup` + backup rules for the files dir).
 - Update flow: check `version.json` on launch (max once/day) and in Settings. New version →
   dialog → browser download → Android installer. `REQUEST_INSTALL_PACKAGES` needed only if we
@@ -491,6 +507,10 @@ Rationale: M1 is usable on its own. If M2's deep links prove painful on her devi
 still worth keeping — and the web page means no link is ever wasted.
 
 ---
+
+**v1.5 — Mailbox**
+P1 per-mailbox Durable Object, Cartas tab, contacts, send/read; push notifications are
+phase 2. See `MAILBOX.md`.
 
 ## 12. Open questions
 

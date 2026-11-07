@@ -276,25 +276,23 @@ action (open tab, add contact, or send), not on launch.
 The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Ajustes**:
 
 - `FolderTabs` becomes **compact and left-aligned**: remove `flex: 1` from `tabHit`, use
-  `flex: 0 0 auto` with `minWidth: 76–80` and comfortable horizontal padding, keep the
-  44–48 dp hit height. The remaining row space stays empty.
+  `flex: 0 0 auto` with `minWidth: 96` and 18 dp horizontal padding, keep the 44–48 dp hit
+  height. The remaining row space stays empty.
 - `FolderTabKey` becomes `'recipes' | 'mailbox' | 'settings'`.
 - Tab colours: Receitas `oliveTab`, Cartas `mauveTab`, Ajustes `tanTab`.
 - `Cartas` carries the unread badge. The `mailboxCount` prop replaces `trashCount` on
   `FolderTabs`.
 - **Lixeira moves into Ajustes** as a row with the trash count badge. The Trash screen is a
-  pushed screen with a back header ("Lixeira") and **no folder tabs**.
-- The Trash route can stay at `/trash`; only the tab entry disappears.
+  root-stack screen at `/trash` with a back header ("Lixeira") and **no folder tabs**.
 - `index.tsx`, `mailbox.tsx` and `settings.tsx` load the unread count on focus and pass it
   to `FolderTabs`; `settings.tsx` also loads `countTrashed()` for the Lixeira row.
-- The active-tab raised state must stay obvious on every tab (the mockup's Início frame is
-  slightly subtle; verify in the build).
+- The active-tab raised state stays obvious on every tab.
 
 ### 7.4 Screens and flows
 
 **Cartas tab (mailbox list)**
 
-- Header: **Caixa de entrada**.
+- Header: **Caixa de entrada** (centered).
 - Row: sender seal (larger than the old 28 dp list seal; designer to finalize, roughly
   40–44 dp), sender name, recipe title, step count, relative sent time, gold dot when
   unread. Unavailable letters show "Carta indisponível."
@@ -426,7 +424,7 @@ storing the sender address with the letter is the small privacy trade-off to rev
 
 ## 11. Delivery phases
 
-### Phase 1 — Mailbox core (recommended first)
+### Phase 1 — Mailbox core (shipped in 1.5.0)
 
 - Server: `Mailbox` DO, mailbox/letter routes, rate limits, smoke tests.
 - App: identity, contacts, Cartas tab, the new three-tab navigation, Lixeira in Ajustes,
@@ -455,13 +453,8 @@ storing the sender address with the letter is the small privacy trade-off to rev
 ## 13. Open questions
 
 1. **Letter retention:** keep until removed, or auto-expire (e.g. 180 days)?
-2. **Discard semantics:** does **Descartar** on a letter also remove it from the mailbox,
-   or only return to the list? Recommendation: return to the list; removal is explicit.
-3. **Multi-recipient send** in v1 or later? Recommendation: later.
-4. **Address rotation UI** in phase 3: generate a new address and tell contacts; keep old
+2. **Address rotation UI** (phase 3): generate a new address and tell contacts; keep old
    letters readable locally?
-5. **Exact tab dimensions:** the designer's note suggests `minWidth: 76–80`, 16 dp padding,
-   left-aligned; confirm against 360 dp and 200% font scale.
 
 ## 14. Appendix — privacy options considered
 
@@ -483,12 +476,12 @@ stable.
 
 - `app/src/components/FolderTabs.tsx`: `FolderTabKey` → `'recipes' | 'mailbox' | 'settings'`;
   remove `trashCount`; add `mailboxCount`; compact left-aligned `tabHit`; new tab list.
-- `app/src/app/(tabs)/trash.tsx`: remove `FolderTabs`; add a back header.
+- `app/src/app/trash.tsx` (moved out of `(tabs)`): back header; no tabs.
 - `app/src/app/(tabs)/settings.tsx`: add the **Lixeira** row with the trash count; keep the
   mailbox unread count for the Cartas badge.
 - `app/src/app/(tabs)/index.tsx`: load the unread count and pass `mailboxCount`.
 - `app/src/app/(tabs)/_layout.tsx` / `app/src/app/_layout.tsx`: register `mailbox` and
-  `mailbox/contacts`; keep `/trash`.
+  `mailbox/contacts`; register `trash` on the root stack.
 - `app/src/app/recipe/[id].tsx`: add the send-to-contact action sheet.
 - `app/src/app/r/[id].tsx`: accept `letter` / `from`; mark read locally.
 - `DESIGN.md` §4/§5.1/§5.6/§5.7: compact left-aligned tabs, Cartas slot, Lixeira in Ajustes.

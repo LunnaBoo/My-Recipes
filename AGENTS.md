@@ -5,8 +5,9 @@ Working notes for anyone (human or agent) touching this repository.
 ## What this is
 
 A private recipe notebook for a handful of people. Android APK, sideloaded — no Play Store.
-A Cloudflare Worker on `r.lunna.boo` provides short share links, a web fallback page, and
-APK/version hosting. Recipes live on the phone; only links touch the server.
+A Cloudflare Worker on `r.lunna.boo` provides short share links, a web fallback page,
+mailbox delivery, and APK/version hosting. Recipes live on the phone; share links and
+mailbox delivery metadata touch the server.
 
 ## Layout
 
@@ -17,6 +18,7 @@ design/     HTML mockups (parchment UI) — reference, not shipped
 SPEC.md     product + technical spec (source of truth for behaviour)
 DESIGN.md   visual system (palette, type, components, RN notes)
 PLAN.md     remaining work and release order
+MAILBOX.md  mailbox feature spec (P1 server, Cartas UI, phase 2 push)
 ```
 
 ## Commands
@@ -72,7 +74,7 @@ gestures) can only be verified on a phone.
   `git config core.hooksPath scripts/git-hooks`.
 - GitHub secret scanning + push protection are enabled on the repo.
 - Share links are unlisted, not private: anyone with the URL can read the recipe.
-- Mailbox (1.5.0): each install has an unguessable address + secret. The Worker stores only
+- Mailbox (1.5.x): each install has an unguessable address + secret. The Worker stores only
   `{letterId, shareId, sentAt}` per letter (P1); read state stays on the phone and the sender
   address is not stored at rest. The secret is stored hashed.
 

@@ -1,12 +1,14 @@
 # My Recipes
 
 Private, two-person recipe notebook for Android. Markdown notes stored locally, shared as
-short links that open the app — or render as a web page if the app isn't installed.
+short links or in-app letters that open the app — with a web page fallback if the app isn't
+installed.
 
 - Product and technical spec: [`SPEC.md`](./SPEC.md)
 - Worker (short links, share page, APK hosting): [`worker/`](./worker)
 - Android app (Expo / React Native): [`app/`](./app)
 - Visual system: [`DESIGN.md`](./DESIGN.md)
+- Mailbox feature spec: [`MAILBOX.md`](./MAILBOX.md)
 
 Share host: `https://r.lunna.boo/r/<id>`
 
