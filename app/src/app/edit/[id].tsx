@@ -1,9 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import {
+  findNodeHandle,
   Keyboard,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +22,11 @@ import {
   type EditorAction,
   type Selection,
 } from '../../lib/editorActions';
+import {
+  continueOrderedList,
+  detectEnterInsertion,
+  renumberOrderedList,
+} from '../../lib/numberedList';
 import { theme } from '../../theme';
 
 type Mode = 'edit' | 'preview';
@@ -52,7 +57,44 @@ export default function EditRecipeScreen() {
   const [discardOpen, setDiscardOpen] = useState(false);
 
   const bodyRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [initial, setInitial] = useState({ title: '', body: '' });
+  const [bodyFocused, setBodyFocused] = useState(false);
+  const keyboardHeightRef = useRef(0);
+
+  const lastBodyRef = useRef({ text: body, selection });
+  lastBodyRef.current = { text: body, selection };
+
+  const scrollBodyIntoView = useCallback(() => {
+    const input = bodyRef.current;
+    const scrollView = scrollViewRef.current;
+    if (!input || !scrollView) return;
+
+    const handle = findNodeHandle(input);
+    if (!handle) return;
+
+    // Scroll so the active input stays clearly above the keyboard.
+    (scrollView as unknown as { scrollResponderScrollNativeHandleToKeyboard?: (
+      node: number,
+      additionalOffset: number,
+      preventNegativeScrollOffset: boolean,
+    ) => void }).scrollResponderScrollNativeHandleToKeyboard?.(handle, 100, true);
+  }, []);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', (event) => {
+      keyboardHeightRef.current = event.endCoordinates.height;
+      if (bodyFocused) scrollBodyIntoView();
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardHeightRef.current = 0;
+    });
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [bodyFocused, scrollBodyIntoView]);
 
   useEffect(() => {
     if (isNew) {
@@ -139,6 +181,30 @@ export default function EditRecipeScreen() {
     [body, selection],
   );
 
+  const handleBodyChange = useCallback((newText: string) => {
+    const prev = lastBodyRef.current;
+
+    const isEnter = detectEnterInsertion(prev.text, newText, prev.selection);
+    if (isEnter) {
+      const continued = continueOrderedList(prev.text, prev.selection);
+      if (continued) {
+        setBody(continued.text);
+        setPendingSelection(continued.selection);
+        lastBodyRef.current = {
+          text: continued.text,
+          selection: continued.selection,
+        };
+        return;
+      }
+    }
+
+    const renumbered = renumberOrderedList(newText, prev.selection);
+    setBody(renumbered.text);
+    // For normal typing we let the native selection stand; only an Enter-driven
+    // list continuation needs an explicit caret position.
+    lastBodyRef.current = { ...lastBodyRef.current, text: renumbered.text };
+  }, []);
+
   const switchMode = useCallback((next: Mode) => {
     Keyboard.dismiss();
     setMode(next);
@@ -146,10 +212,7 @@ export default function EditRecipeScreen() {
 
   return (
     <ScreenFrame>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
+      <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <View style={styles.topBar}>
           <Pressable accessibilityRole="button" onPress={requestClose}>
             <Text style={styles.link}>{ptBR.cancel}</Text>
@@ -199,6 +262,7 @@ export default function EditRecipeScreen() {
           contentContainerStyle={styles.content}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
+          ref={scrollViewRef}
         >
           <Text style={styles.fieldLabel}>{ptBR.titleLabel}</Text>
           <TextInput
@@ -240,8 +304,15 @@ export default function EditRecipeScreen() {
               <TextInput
                 editable={ready}
                 multiline
-                onBlur={autosave}
-                onChangeText={setBody}
+                onBlur={() => {
+                  setBodyFocused(false);
+                  autosave();
+                }}
+                onChangeText={handleBodyChange}
+                onFocus={() => {
+                  setBodyFocused(true);
+                  scrollBodyIntoView();
+                }}
                 onSelectionChange={(event) => {
                   setSelection(event.nativeEvent.selection);
                   if (pendingSelection) setPendingSelection(null);

@@ -26,7 +26,6 @@ export const ptBR = {
   mailboxTab: 'Cartas',
   trashTab: 'Lixeira',
   settingsTab: 'Ajustes',
-  recipeHeader: 'Receita',
   searchPlaceholder: 'Buscar receitas…',
   filterAll: 'Todas',
   filterPinned: 'Fixadas',

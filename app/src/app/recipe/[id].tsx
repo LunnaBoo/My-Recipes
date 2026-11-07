@@ -17,7 +17,6 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Markdown } from '../../components/Markdown';
 import { ScreenFrame } from '../../components/ScreenFrame';
 import { Seal } from '../../components/Seal';
-import { SectionHeader } from '../../components/SectionHeader';
 import { Snackbar } from '../../components/Snackbar';
 import type { ContactRow } from '../../db/types';
 import { listContacts } from '../../db/mailboxRepository';
@@ -294,8 +293,6 @@ export default function RecipeViewScreen() {
         keyboardShouldPersistTaps="handled"
         style={styles.flex}
       >
-        <SectionHeader title={ptBR.recipeHeader} />
-
         {imported ? (
           <>
             <View style={styles.headerRow}>
