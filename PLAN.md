@@ -135,6 +135,8 @@ These have never run on a device and need a phone pass:
 - [ ] Add sender to contacts: a mailbox letter shows the footer link; one tap adds the
       contact and removes the link; public link imports show no link; the new contact can
       receive a recipe.
+- [ ] Upgrade from 1.5.3 to 1.6.0 with existing letters: the app opens and the v4
+      `sender_address` migration preserves the inbox.
 
 ## Open questions
 
