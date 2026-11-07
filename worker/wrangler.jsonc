@@ -28,7 +28,7 @@
     // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
     "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
     "APK_URL": "https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk",
-    "VERSION_JSON": "{\"versionCode\":10,\"versionName\":\"1.5.3\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105354386,\"sha256\":\"32f5a2f35bf5a38ee0eaef078050bce34aaabdbeeaf59874355889c7f05c01f0\",\"notes\":\"Editor com teclado estável: o campo de texto acompanha o teclado e mantém a linha em edição visível.\"}",
+    "VERSION_JSON": "{\"versionCode\":11,\"versionName\":\"1.6.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105358322,\"sha256\":\"8e279337a7e420aec46003c2516bbedbe1d64a818bf9e9092b27208ceb08b894\",\"notes\":\"Adicione o remetente aos contatos direto da carta recebida.\"}",
     "SITE_NAME": "My Recipes"
   }
 }

@@ -5,7 +5,7 @@ Expo Router, SQLite/FTS5, and plain Markdown files on disk.
 
 The app implements the v1 surface — parchment shell, recipe list and editor, paste-import,
 sharing, the **Cartas** mailbox, trash, and settings — plus backup export/import and the
-in-app updater. Current release: 1.5.3 (versionCode 10).
+in-app updater. Current release: 1.6.0 (versionCode 11).
 
 ## Prerequisites
 

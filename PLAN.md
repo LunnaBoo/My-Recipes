@@ -16,7 +16,7 @@ Last updated: 2026-11-07
   real keystore fingerprint published.
 - Domain confirmed on Cloudflare Registrar (auto-renew, expires 2027-05-07).
 
-**App (v1; current 1.5.3)**
+**App (v1; current 1.6.0)**
 - Parchment shell, folder tabs, home list with search + Todas/Fixadas, recipe view.
 - Editor (plain), paste-import with WhatsApp → Markdown conversion, 30-day trash (data layer).
 - Share via short link + system share sheet; import letter with Salvar/Descartar.
@@ -40,7 +40,7 @@ Last updated: 2026-11-07
 - [x] Worker deployed; EAS 1.5.0 / versionCode 7 published as a GitHub Release.
 - [ ] Push notifications (phase 2).
 
-## Mailbox — add sender to contacts (unreleased)
+## Mailbox — add sender to contacts (1.6.0)
 
 Decision 2026-11-07: retain the sender's authenticated mailbox address with each letter,
 visible only to the authenticated recipient (P1 revision). Public link imports stay
@@ -49,9 +49,9 @@ address-free.
 - [x] Worker: store `{letterId, shareId, sentAt, senderAddress}`; keep old rows valid; return
       the address only on the recipient's authenticated letter view; 217 smoke assertions.
 - [x] App: cache `sender_address` (migration v4), normalize it, and show one-tap
-      **Adicionar aos contatos** on mailbox letters.
-- [ ] Device check: a letter from another mailbox shows the link; adding hides it and the
-      contact can receive recipes; public link imports show no link.
+      **Adicionar aos contatos** in the letter footer on mailbox letters.
+- [x] Released 1.6.0 / versionCode 11 on 2026-11-07: EAS preview, GitHub Release, Worker
+      deployed.
 
 ## Releases
 
@@ -132,6 +132,9 @@ These have never run on a device and need a phone pass:
 - [ ] Launcher icon under the OEM adaptive mask (art at 62% of the 1024 canvas; reduce to 60% if clipped).
 - [ ] Seal picker cells on wide screens (31% + aspect-ratio leaves a large empty tile at ≥430dp).
 - [ ] Share sheet message format in WhatsApp.
+- [ ] Add sender to contacts: a mailbox letter shows the footer link; one tap adds the
+      contact and removes the link; public link imports show no link; the new contact can
+      receive a recipe.
 
 ## Open questions
 
@@ -154,3 +157,4 @@ These have never run on a device and need a phone pass:
 | 1.5.1 | 8 | 2026-11-06 | Wider tabs, centered Cartas header, Contatos label, readable address placeholder. |
 | 1.5.2 | 9 | 2026-11-07 | Editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed. |
 | 1.5.3 | 10 | 2026-11-07 | Stable editor keyboard, device-verified: the writing field resizes above the keyboard and keeps the caret line visible. |
+| 1.6.0 | 11 | 2026-11-07 | Add the sender to contacts from a mailbox letter; P1 now retains the recipient-only sender address. |
