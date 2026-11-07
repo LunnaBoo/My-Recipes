@@ -102,7 +102,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - **Active tab** is taller, fully opaque, and visually connected to the panel: its own background color continues down over the panel top edge via a small overlap, so there is no visible bottom edge where tab meets parchment.
 - **Inactive tabs** sit lower, are slightly recessed (lower opacity + inset shadow), and appear to tuck behind the panel surface.
 - The `Cartas` tab carries the unread-letter badge inside its face. The trash count moves to the Ajustes → Lixeira row.
-- Tabs are compact and left-aligned; the remaining row space stays empty. Minimum tab hit target: 48px height, 80px width on a 360dp screen.
+- Tabs are compact and left-aligned; the remaining row space stays empty. Minimum tab hit target: 48px height, 96px width on a 360dp screen.
 
 ### List row
 
@@ -260,7 +260,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 
 - Tab "Ajustes" folder is Tan Tab.
 - Grouped list on parchment, section headers in uppercase serif.
-- Fields: Nome de exibição, Seu selo, Caixa de entrada, Lixeira (with count), Exportar backup, Importar backup, Verificar atualização.
+- Fields: Nome de exibição, Seu selo, Contatos, Lixeira (with count), Exportar backup, Importar backup, Verificar atualização.
 - Version info at bottom in Meta style.
 
 ### 5.8 Seu selo

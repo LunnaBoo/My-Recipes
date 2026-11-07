@@ -372,7 +372,7 @@ normalized markdown is what gets stored.
   re-encode to 256×256 JPEG). A live preview shows the seal as it will appear on shares.
 - Export backup (zip) / Import backup.
 - Check for updates → compares `version.json`, offers the APK link.
-- **Caixa de entrada** → mailbox address + contacts.
+- **Contatos** → mailbox address + contacts.
 - **Lixeira** → trash, with the deleted count.
 - App version and share-domain info.
 - No share management / revoke UI in v1.

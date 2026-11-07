@@ -324,14 +324,14 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
 
 **Contatos**
 
-- Reached from the Cartas header or Settings.
+- Reached from Settings → **Contatos**.
 - Top card: **Seu endereço** with copy and share actions.
 - **Adicionar contato**: paste address → resolve profile → confirm name/seal → save.
 - Row: seal, name, address, last sent; long-press: edit name, remove.
 
 **Settings**
 
-- Row **Caixa de entrada** → address screen.
+- Row **Contatos** → address/contacts screen.
 - Row **Lixeira** with the trash count → `/trash`.
 - Phase 2: **Notificações** toggle (permission state + "Abrir ajustes" when denied).
 
