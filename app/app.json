@@ -2,7 +2,7 @@
   "expo": {
     "name": "My Recipes",
     "slug": "my-recipes",
-    "version": "1.5.3",
+    "version": "1.6.0",
     "orientation": "portrait",
     "scheme": "myrecipes",
     "icon": "./assets/icon.png",
@@ -39,7 +39,7 @@
           ]
         }
       ],
-      "versionCode": 10
+      "versionCode": 11
     },
     "web": {
       "favicon": "./assets/favicon.png",
