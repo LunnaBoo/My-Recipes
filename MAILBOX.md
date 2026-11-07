@@ -1,8 +1,9 @@
 # Mailbox — in-app recipe letters
 
-Status: **shipped in 1.5.0 (versionCode 7, 2026-11-06).** Phase 1 (P1 mailbox + Cartas UI) is
-live; push notifications are phase 2. Release:
-`https://github.com/LunnaBoo/My-Recipes/releases/tag/v1.5.0`.
+Status: **shipped in 1.5.x (1.5.1, versionCode 8, 2026-11-06).** Phase 1 (P1 mailbox +
+Cartas UI) is live; push notifications are phase 2. Release:
+`https://github.com/LunnaBoo/My-Recipes/releases/tag/v1.5.1`.
+1.5.1 polish: wider tabs, centered Cartas header, Contatos label, readable address placeholder.
 `SPEC.md` remains the source of truth for shipped behaviour; this file records the full design.
 
 ## 1. What this is

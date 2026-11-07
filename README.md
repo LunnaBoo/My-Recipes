@@ -16,5 +16,5 @@ Current state, remaining work, and the release order live in [`PLAN.md`](./PLAN.
 Working conventions for agents and contributors are in [`AGENTS.md`](./AGENTS.md).
 
 - Live: `https://r.lunna.boo` (share links, install page, APK + version endpoints)
-- Released: v1.5.0 (versionCode 7, 2026-11-06) — Cartas mailbox; next up: push notifications (phase 2) and remaining v4 polish
+- Released: v1.5.1 (versionCode 8, 2026-11-06) — Cartas mailbox + UI polish; next up: push notifications (phase 2) and remaining v4 polish
 - Repo: `https://github.com/LunnaBoo/My-Recipes`
