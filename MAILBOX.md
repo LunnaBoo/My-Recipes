@@ -1,11 +1,12 @@
 # Mailbox — in-app recipe letters
 
-Status: **shipped (feature release 1.5.0; latest app 1.5.2, versionCode 9).** Phase 1 (P1
+Status: **shipped (feature release 1.5.0; latest app 1.5.3, versionCode 10).** Phase 1 (P1
 mailbox + Cartas UI) is live; push notifications are phase 2. Feature release:
 `https://github.com/LunnaBoo/My-Recipes/releases/tag/v1.5.0`; latest:
-`https://github.com/LunnaBoo/My-Recipes/releases/tag/v1.5.2`.
+`https://github.com/LunnaBoo/My-Recipes/releases/tag/v1.5.3`.
 1.5.1 polish: wider tabs, centered Cartas header, Contatos label, readable address placeholder.
 1.5.2: editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed.
+1.5.3: the writing field follows the keyboard and keeps the active caret line visible.
 `SPEC.md` remains the source of truth for shipped behaviour; this file records the full design.
 
 ## 1. What this is

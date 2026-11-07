@@ -16,7 +16,7 @@ Last updated: 2026-11-07
   real keystore fingerprint published.
 - Domain confirmed on Cloudflare Registrar (auto-renew, expires 2027-05-07).
 
-**App (v1; current 1.5.2)**
+**App (v1; current 1.5.3)**
 - Parchment shell, folder tabs, home list with search + Todas/Fixadas, recipe view.
 - Editor (plain), paste-import with WhatsApp → Markdown conversion, 30-day trash (data layer).
 - Share via short link + system share sheet; import letter with Salvar/Descartar.
@@ -143,3 +143,4 @@ These have never run on a device and need a phone pass:
 | 1.5.0 | 7 | 2026-11-06 | Cartas mailbox: P1 server, Cartas tab, contacts, send/read; Lixeira in Ajustes. |
 | 1.5.1 | 8 | 2026-11-06 | Wider tabs, centered Cartas header, Contatos label, readable address placeholder. |
 | 1.5.2 | 9 | 2026-11-07 | Editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed. |
+| 1.5.3 | 10 | 2026-11-07 | Stable editor keyboard: the writing field resizes above the keyboard and keeps the caret line visible. |

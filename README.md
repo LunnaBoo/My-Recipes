@@ -18,5 +18,5 @@ Current state, remaining work, and the release order live in [`PLAN.md`](./PLAN.
 Working conventions for agents and contributors are in [`AGENTS.md`](./AGENTS.md).
 
 - Live: `https://r.lunna.boo` (share links, install page, APK + version endpoints)
-- Released: v1.5.2 (versionCode 9, 2026-11-07) — editor keyboard + auto-numbered ordered lists; next up: push notifications (phase 2) and remaining v4 polish
+- Released: v1.5.3 (versionCode 10, 2026-11-07) — stable editor keyboard: the writing field follows the keyboard and keeps the active line visible; next up: push notifications (phase 2) and remaining v4 polish
 - Repo: `https://github.com/LunnaBoo/My-Recipes`

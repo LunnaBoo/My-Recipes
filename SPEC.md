@@ -4,7 +4,7 @@ A private, two-person recipe notebook for Android: markdown notes, local-first, 
 recipe as a short link that opens the app on the other phone with **Salvar / Descartar** —
 or, if the app isn't installed, shows the recipe as a normal web page.
 
-Status: shipping (v1.5.2). This document remains the source of truth for behaviour;
+Status: shipping (v1.5.3). This document remains the source of truth for behaviour;
 `PLAN.md` tracks what is built and what comes next.
 
 Locked decisions:
