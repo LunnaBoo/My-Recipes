@@ -4,7 +4,7 @@ A private, two-person recipe notebook for Android: markdown notes, local-first, 
 recipe as a short link that opens the app on the other phone with **Salvar / Descartar** —
 or, if the app isn't installed, shows the recipe as a normal web page.
 
-Status: shipping (v1.5.1). This document remains the source of truth for behaviour;
+Status: shipping (v1.5.2). This document remains the source of truth for behaviour;
 `PLAN.md` tracks what is built and what comes next.
 
 Locked decisions:
@@ -300,6 +300,7 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 
 ### 6.2 Recipe view
 - Rendered markdown, scrollable, generous type (this is read while cooking).
+- No redundant "Receita" section header; the home list already says "Receitas".
 - Own recipes: cream/tan card with the profile seal, centred "Receita de <name>" (or
   "Sua receita"), centred title and step count, then the body. A `⋯` menu at the card's
   top-right holds pin/delete.
@@ -318,6 +319,10 @@ v2). Dates and plurals via `Intl` with `pt-BR`.
 - Toggle: Editar / Pré-visualizar.
 - Autosave on blur + explicit Salvar; draft survives process death.
 - Validation: non-empty title, body ≤ 64 KB, warn on unsaved changes.
+- Ordered lists renumber automatically: Enter inserts the next step and shifts the rest;
+  deleting a step renumbers the block. Indentation and `.`/`)` are preserved; code fences
+  are ignored.
+- The body field scrolls above the Android keyboard so the line being edited stays visible.
 
 ### 6.4 Paste-import ("Colar receita")
 

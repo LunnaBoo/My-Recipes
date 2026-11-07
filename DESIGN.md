@@ -201,6 +201,7 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 ### 5.2 Recipe view
 
 - Same outer parchment panel; the content treatment differs by origin (below).
+- No redundant "Receita" section header; the card or imported header starts the content.
 - Rendered Markdown body, generous vertical rhythm.
 - Bottom action bar (sticky): **Enviar · Copiar · Editar**, styled as pill buttons.
 
@@ -228,6 +229,8 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
   - Toolbar: horizontal strip with Markdown buttons (bold, italic, heading, list, checkbox, divider).
   - Toggle: Editar / Pré-visualizar as two pill segments; active segment uses Olive Tab background with Cream text.
 - Cursor and selection use system defaults tinted toward Sage (`#8A9A5B`).
+- The body scrolls above the Android keyboard; the focused line stays visible.
+- Ordered lists renumber as you type (Enter/delete), preserving indentation and delimiter.
 - No faux-handwriting font; the app is a journal, not a forgery.
 
 ### 5.4 Paste-import (Colar receita)

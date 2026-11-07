@@ -3,7 +3,7 @@
 Remaining work and release order. `SPEC.md` defines behaviour; this file tracks what is
 actually built and what comes next.
 
-Last updated: 2026-11-06
+Last updated: 2026-11-07
 
 ## Shipped
 
@@ -136,3 +136,4 @@ These have never run on a device and need a phone pass:
 | 1.4.0 | 6 | 2026-11-06 | Own-recipe card, home side branches, imported-recipe copy cleanup. |
 | 1.5.0 | 7 | 2026-11-06 | Cartas mailbox: P1 server, Cartas tab, contacts, send/read; Lixeira in Ajustes. |
 | 1.5.1 | 8 | 2026-11-06 | Wider tabs, centered Cartas header, Contatos label, readable address placeholder. |
+| 1.5.2 | 9 | 2026-11-07 | Editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed. |
