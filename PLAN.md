@@ -119,9 +119,6 @@ These have never run on a device and need a phone pass:
 - [ ] Launcher icon under the OEM adaptive mask (art at 62% of the 1024 canvas; reduce to 60% if clipped).
 - [ ] Seal picker cells on wide screens (31% + aspect-ratio leaves a large empty tile at ≥430dp).
 - [ ] Share sheet message format in WhatsApp.
-- [ ] Editor keyboard: with a long body and the caret at the end, the body field shrinks above
-      the IME, the caret stays visible without dragging, and preview mode still scrolls. Check
-      both Android 14 (window resizes) and Android 15/16 (edge-to-edge).
 
 ## Open questions
 
@@ -143,4 +140,4 @@ These have never run on a device and need a phone pass:
 | 1.5.0 | 7 | 2026-11-06 | Cartas mailbox: P1 server, Cartas tab, contacts, send/read; Lixeira in Ajustes. |
 | 1.5.1 | 8 | 2026-11-06 | Wider tabs, centered Cartas header, Contatos label, readable address placeholder. |
 | 1.5.2 | 9 | 2026-11-07 | Editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed. |
-| 1.5.3 | 10 | 2026-11-07 | Stable editor keyboard: the writing field resizes above the keyboard and keeps the caret line visible. |
+| 1.5.3 | 10 | 2026-11-07 | Stable editor keyboard, device-verified: the writing field resizes above the keyboard and keeps the caret line visible. |
