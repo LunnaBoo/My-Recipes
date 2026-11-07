@@ -1,10 +1,16 @@
 /**
  * Per-mailbox Durable Object (MAILBOX.md §6.1).
  *
- * Privacy contract (P1): a stored letter is only `{ id, shareId, sentAt }`.
- * Read state, the sender address, the recipe title/step count and the sender
- * name/seal are never written here. The Worker joins the display fields from
- * `r:<shareId>` at read time, for the authenticated recipient only.
+ * Privacy contract (P1): a stored letter is `{ id, shareId, sentAt,
+ * senderAddress }`. Only the sender's validated mailbox address is retained;
+ * read state, the recipe title/step count and the sender name/seal are never
+ * written here. The Worker joins those display fields from `r:<shareId>` at
+ * read time, for the authenticated recipient only. Rows stored before the
+ * sender address was kept have no `senderAddress` and stay valid.
+ *
+ * The sender address never appears in a public share payload, the public
+ * share page, or the public mailbox profile; it is only returned to the
+ * authenticated recipient so their app can add the sender to contacts.
  *
  * The object is internal: it is reached through the `MAILBOXES` binding and
  * never exposed as a public route.
@@ -52,6 +58,11 @@ export interface Letter {
   id: string;
   shareId: string;
   sentAt: number;
+  /**
+   * The sender's validated mailbox address. Optional on rows stored before the
+   * field was introduced; always present on newly stored letters.
+   */
+  senderAddress?: string;
 }
 
 export interface PushToken {
@@ -170,11 +181,24 @@ async function readLetters(storage: DurableObjectStorage): Promise<Letter[]> {
 function isLetter(value: unknown): value is Letter {
   if (value === null || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return (
-    typeof record.id === "string" &&
-    typeof record.shareId === "string" &&
-    typeof record.sentAt === "number"
-  );
+  if (
+    typeof record.id !== "string" ||
+    typeof record.shareId !== "string" ||
+    typeof record.sentAt !== "number"
+  ) {
+    return false;
+  }
+  // Backward compatible: old rows predate `senderAddress`. When present it must
+  // still be a valid address, never an arbitrary string.
+  if (record.senderAddress !== undefined) {
+    if (
+      typeof record.senderAddress !== "string" ||
+      !isValidId(record.senderAddress)
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export class Mailbox implements DurableObject {
@@ -326,6 +350,11 @@ export class Mailbox implements DurableObject {
       return json({ error: "invalid" }, 400);
     }
 
+    const senderAddress = parsed.value.senderAddress;
+    if (typeof senderAddress !== "string" || !isValidId(senderAddress)) {
+      return json({ error: "invalid" }, 400);
+    }
+
     const letters = (await readLetters(this.storage)).filter(isLetter);
 
     if (letters.length >= MAX_LETTERS) {
@@ -344,7 +373,12 @@ export class Mailbox implements DurableObject {
       });
     }
 
-    const letter: Letter = { id: generateId(), shareId, sentAt: now };
+    const letter: Letter = {
+      id: generateId(),
+      shareId,
+      sentAt: now,
+      senderAddress,
+    };
     // Newest first; `letters` is the only ordering the list endpoint needs.
     await this.storage.put(LETTERS_KEY, [letter, ...letters]);
 

@@ -10,19 +10,25 @@ import {
 } from 'react-native';
 
 import { ActionBar } from '../../components/ActionBar';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Markdown } from '../../components/Markdown';
 import { ScreenFrame } from '../../components/ScreenFrame';
 import { Seal } from '../../components/Seal';
 import { SectionHeader } from '../../components/SectionHeader';
 import { Snackbar } from '../../components/Snackbar';
-import { markLetterRead } from '../../db/mailboxRepository';
+import {
+  addContact,
+  getContactByAddress,
+  getLetter,
+  markLetterRead,
+} from '../../db/mailboxRepository';
 import {
   createRecipe,
   getRecipeByActiveShareId,
   getRecipeBySourceShareId,
   updateRecipe,
 } from '../../db/repository';
-import type { Recipe } from '../../db/types';
+import type { LetterRow, Recipe } from '../../db/types';
 import { ptBR } from '../../i18n/pt-BR';
 import { fetchShare, type SharedRecipe, type ShareError } from '../../lib/api';
 import { parseSeal, sealToStored } from '../../lib/seal';
@@ -69,13 +75,42 @@ export default function SharedRecipeScreen() {
 
   const requestRef = useRef(0);
   const savingRef = useRef(false);
+  const addingContactRef = useRef(false);
+
+  const [letterRow, setLetterRow] = useState<LetterRow | null>(null);
+  const [contactStatus, setContactStatus] = useState<'unknown' | 'yes' | 'no'>('unknown');
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   useEffect(() => {
-    if (letter) {
-      markLetterRead(letter).catch((error: unknown) => {
-        console.warn('[share] mark read failed:', error);
-      });
-    }
+    if (!letter) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const row = await getLetter(letter);
+        if (cancelled) return;
+
+        setLetterRow(row);
+
+        if (row?.sender_address) {
+          const existing = await getContactByAddress(row.sender_address);
+          if (!cancelled) setContactStatus(existing ? 'yes' : 'no');
+        } else {
+          setContactStatus('yes');
+        }
+      } catch (error) {
+        console.warn('[share] letter load failed:', error);
+      }
+    })();
+
+    markLetterRead(letter).catch((error: unknown) => {
+      console.warn('[share] mark read failed:', error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [letter]);
 
   const load = useCallback(async () => {
@@ -181,6 +216,31 @@ export default function SharedRecipeScreen() {
     }
   }, [from, router]);
 
+  const confirmAddContact = useCallback(async () => {
+    if (!letterRow?.sender_address || !share?.sender || addingContactRef.current) return;
+
+    addingContactRef.current = true;
+
+    try {
+      const seal = parseSeal(share.senderSeal);
+      await addContact({
+        address: letterRow.sender_address,
+        displayName: share.sender,
+        sealJson: seal ? sealToStored(seal) : null,
+      });
+
+      setContactStatus('yes');
+      setConfirmVisible(false);
+      setSnackbar(ptBR.senderAdded(share.sender));
+    } catch (addError) {
+      console.warn('[share] add contact failed:', addError);
+      setConfirmVisible(false);
+      setSnackbar(ptBR.contactAddFailed);
+    } finally {
+      addingContactRef.current = false;
+    }
+  }, [letterRow, share]);
+
   if (loading) {
     return (
       <ScreenFrame corners="diagonal">
@@ -220,6 +280,13 @@ export default function SharedRecipeScreen() {
   const localHash = existing?.content_hash ?? null;
   const hasNewerCopy = existing !== null && localHash !== share.contentHash;
   const senderSeal = parseSeal(share.senderSeal);
+
+  const showAddSender =
+    Boolean(letter) &&
+    letterRow?.sender_address != null &&
+    share.sender != null &&
+    !own &&
+    contactStatus === 'no';
 
   const actions = own
     ? [
@@ -295,6 +362,18 @@ export default function SharedRecipeScreen() {
           <Text style={styles.letterFrom}>
             {share.sender ? ptBR.letterFrom(share.sender) : ptBR.sharedRecipe}
           </Text>
+
+          {showAddSender && share.sender ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={ptBR.addSenderHint(share.sender)}
+              onPress={() => setConfirmVisible(true)}
+              style={({ pressed }) => [styles.addSender, pressed && styles.pressed]}
+            >
+              <Text style={styles.addSenderLabel}>{ptBR.addSenderToContacts}</Text>
+            </Pressable>
+          ) : null}
+
           <Text numberOfLines={2} style={styles.title}>
             {share.title}
           </Text>
@@ -321,6 +400,18 @@ export default function SharedRecipeScreen() {
       </ScrollView>
 
       <ActionBar actions={actions} />
+
+      {share.sender && letterRow?.sender_address ? (
+        <ConfirmDialog
+          visible={confirmVisible}
+          title={ptBR.addSenderConfirmTitle(share.sender)}
+          body={ptBR.addSenderConfirmBody(letterRow.sender_address)}
+          confirmLabel={ptBR.addContact}
+          cancelLabel={ptBR.cancel}
+          onConfirm={() => void confirmAddContact()}
+          onDismiss={() => setConfirmVisible(false)}
+        />
+      ) : null}
 
       {snackbar ? (
         <Snackbar key={snackbar} message={snackbar} onDismiss={() => setSnackbar(null)} />
@@ -396,6 +487,21 @@ const styles = StyleSheet.create({
     color: theme.colors.inkLight,
     textAlign: 'center',
     textTransform: 'uppercase',
+  },
+  addSender: {
+    alignSelf: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.xs,
+  },
+  addSenderLabel: {
+    ...theme.typography.button,
+    color: theme.colors.ink,
+    textDecorationLine: 'underline',
+    fontSize: 12,
+    lineHeight: 18,
+    textTransform: 'none',
   },
   title: {
     ...theme.typography.recipeTitle,

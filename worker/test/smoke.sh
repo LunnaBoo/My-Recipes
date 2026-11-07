@@ -855,6 +855,8 @@ check_status "GET public mailbox profile -> 200" 200
 check_eq "profile name" "Lucas" "$(json_get name)"
 check_eq "profile seal id" "cat" "$(json_get seal.id)"
 check_body_not_contains "profile never exposes the secret hash" 'secretHash'
+check_body_not_contains "profile never exposes an address field" 'address'
+check_body_not_contains "profile never exposes the mailbox address" "$MAILBOX_A"
 
 STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_MISSING/profile")"
 check_status "profile of an unknown mailbox -> 404" 404
@@ -902,6 +904,8 @@ check_eq "sent letter joins the step count" "3" "$(json_get letter.stepCount)"
 check_eq "sent letter joins the sender" "Lucas" "$(json_get letter.sender)"
 check_eq "sent letter is available" "true" "$(json_get letter.available)"
 check_eq "sent letter keeps the share id" "$LETTER_SHARE" "$(json_get letter.shareId)"
+check_eq "sent letter carries the authenticated sender address" \
+  "$MAILBOX_A" "$(json_get letter.senderAddress)"
 
 STATUS="$(request POST "$BASE/api/mailboxes/$MAILBOX_B/letters" \
   -H "X-App-Key: $APP_KEY_VALUE" \
@@ -919,8 +923,16 @@ check_eq "list has the sent letter" "$LETTER_ID" "$(json_get letters.0.id)"
 check_eq "list joins the title" "Carta de teste" "$(json_get letters.0.title)"
 check_eq "list joins the sender" "Lucas" "$(json_get letters.0.sender)"
 check_eq "list marks the letter available" "true" "$(json_get letters.0.available)"
-check_body_not_contains "list never exposes the sender address" 'senderAddress'
+check_eq "list carries the sender address" \
+  "$MAILBOX_A" "$(json_get letters.0.senderAddress)"
 check_body_not_contains "list never exposes read state" 'readAt'
+
+# Privacy boundary: the sender address is only on the recipient's
+# authenticated letter view, never on the public share payload.
+STATUS="$(request GET "$BASE/api/recipes/$LETTER_SHARE")"
+check_status "public share payload -> 200" 200
+check_body_not_contains "public share payload never exposes the sender address" \
+  'senderAddress'
 
 STATUS="$(request GET "$BASE/api/mailboxes/$MAILBOX_B/letters" \
   -H "Authorization: Bearer $SECRET_WRONG")"

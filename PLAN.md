@@ -10,7 +10,7 @@ Last updated: 2026-11-07
 **Infrastructure**
 - Worker on `r.lunna.boo`: `POST/GET/PUT/DELETE /api/recipes/:id`, `/r/:id` share page,
   `/` install page, `/.well-known/assetlinks.json`, `/app/latest.apk`, `/app/version.json`,
-  `/assets/page.js`, `robots.txt`. 212 smoke assertions passing.
+  `/assets/page.js`, `robots.txt`. 217 smoke assertions passing.
 - KV storage, HTTPS-only redirect, per-IP Durable Object write limit (20 writes/hour),
   hardened response headers (CSP `frame-ancestors`, `X-Frame-Options`, `Permissions-Policy`),
   real keystore fingerprint published.
@@ -39,6 +39,19 @@ Last updated: 2026-11-07
       44 dp seals.
 - [x] Worker deployed; EAS 1.5.0 / versionCode 7 published as a GitHub Release.
 - [ ] Push notifications (phase 2).
+
+## Mailbox — add sender to contacts (unreleased)
+
+Decision 2026-11-07: retain the sender's authenticated mailbox address with each letter,
+visible only to the authenticated recipient (P1 revision). Public link imports stay
+address-free.
+
+- [x] Worker: store `{letterId, shareId, sentAt, senderAddress}`; keep old rows valid; return
+      the address only on the recipient's authenticated letter view; 217 smoke assertions.
+- [x] App: cache `sender_address` (migration v4), normalize it, and show one-tap
+      **Adicionar aos contatos** on mailbox letters.
+- [ ] Device check: a letter from another mailbox shows the link; adding hides it and the
+      contact can receive recipes; public link imports show no link.
 
 ## Releases
 

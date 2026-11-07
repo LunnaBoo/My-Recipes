@@ -250,6 +250,12 @@ export const ptBR = {
 
   // Contacts
   addContact: 'Adicionar contato',
+  addSenderToContacts: 'Adicionar aos contatos',
+  addSenderHint: (name: string) => `Salvar ${name} na lista de contatos`,
+  addSenderConfirmTitle: (name: string) => `Adicionar ${name}?`,
+  addSenderConfirmBody: (address: string) =>
+    `${address}\nserá salvo na sua lista de contatos.`,
+  senderAdded: (name: string) => `${name} foi adicionado aos contatos.`,
   contactsTitle: 'Contatos',
   contactsEmpty: 'Nenhum contato ainda.',
   contactsEmptyBody: 'Adicione o endereço de quem pode te enviar receitas.',

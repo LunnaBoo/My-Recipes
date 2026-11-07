@@ -7,6 +7,8 @@ mailbox + Cartas UI) is live; push notifications are phase 2. Feature release:
 1.5.1 polish: wider tabs, centered Cartas header, Contatos label, readable address placeholder.
 1.5.2: editor keyboard avoidance, auto-numbered ordered lists, redundant Receita header removed.
 1.5.3: the writing field follows the keyboard and keeps the active caret line visible.
+Unreleased: mailbox letters carry the sender's authenticated address so the recipient can
+add them to contacts in one tap.
 `SPEC.md` remains the source of truth for shipped behaviour; this file records the full design.
 
 ## 1. What this is
@@ -32,17 +34,21 @@ a shared recipe library and not sync.
 | D1 | Addressing | **Contact codes**: public 12-char mailbox address + private secret |
 | D2 | Notifications | **Phase 2** (Expo Push/FCM); phase 1 ships the mailbox with a local unread badge |
 | D3 | Server storage | **Per-mailbox Durable Object** |
-| D4 | Privacy | **P1 — metadata-minimized**: server stores only `{letterId, shareId, sentAt}` per letter; read state local; no server blocks; sender address not stored at rest |
+| D4 | Privacy | **P1 (revised 2026-11-07) — metadata-minimized**: server stores `{letterId, shareId, sentAt, senderAddress}` per letter for the recipient only; read state local; no server blocks. The sender address is never public. |
 | D5 | Backup | Include mailbox address + secret + read state; restore **only on a fresh install** |
 | D6 | Navigation | **Three compact, left-aligned tabs: Receitas / Cartas / Ajustes**; Lixeira moves into Ajustes; Trash is a pushed screen with no tabs |
 | D7 | Design | `incoming/mockups/mailbox-nav-final.png` (gitignored reference) |
 
-**Why P1:** it removes the new at-rest social graph and read receipts with almost no extra
-complexity. It is not end-to-end encryption; the recipe content remains in the readable
-`r:<shareId>` (as today). The stronger options were rejected: P2b is encryption theater
-(the server can re-derive the metadata from the readable share), and P2 (encrypted content,
-no public share) would break the web fallback, WhatsApp preview, link forwarding and the
-existing dedupe/update flow. See §14.
+**Why P1:** it removes read receipts and keeps the sender graph out of public shares with
+almost no extra complexity. **Revision 2026-11-07:** the recipient's letter now retains the
+sender's authenticated mailbox address so the app can offer **Adicionar aos contatos**. The
+address is the sender's public contact code (like a phone number), returned only to the
+authenticated recipient; it is never in a share payload, share page or profile. That is the
+small trade-off §8.1 anticipated. It is not end-to-end encryption; the recipe content
+remains in the readable `r:<shareId>` (as today). The stronger options were rejected: P2b is
+encryption theater (the server can re-derive the metadata from the readable share), and P2
+(encrypted content, no public share) would break the web fallback, WhatsApp preview, link
+forwarding and the existing dedupe/update flow. See §14.
 
 ## 3. Goals
 
@@ -118,6 +124,11 @@ Adding a contact:
 3. Confirm the name/seal, save locally.
 4. If the address does not exist: "Endereço não encontrado."
 
+Contacts can also be added from a received letter: when the cached letter carries the
+sender's authenticated address and they are not already a contact, the letter screen shows
+**Adicionar aos contatos**. One tap saves the name and seal already shown on the letter.
+Public link imports carry no address and do not show this action.
+
 The address is shared out of band, like a phone number: Settings → **Seu endereço** →
 **Copiar endereço** / system share sheet with a short message.
 
@@ -143,14 +154,17 @@ type Letter = {
   id: string;              // 12-char id
   shareId: string;         // r:<shareId> in KV
   sentAt: number;
+  senderAddress: string;   // authenticated sender's mailbox address
 };
 ```
 
 Keys: `meta`, `letters` (array, newest first), `pushTokens` (array, max 3).
 
-There is **no** `readAt`, `senderAddress`, `title`, `stepCount`, `senderName`, `senderSeal`
-or `blocked` list in the stored letter. The list endpoint joins the share at read time (the
-Worker can already read it) and returns the display fields to the authenticated recipient.
+There is **no** `readAt`, `title`, `stepCount`, `senderName`, `senderSeal` or `blocked` list
+in the stored letter. `senderAddress` is retained for the recipient only. The list endpoint
+joins the share at read time (the Worker can already read it) and returns the display fields
+to the authenticated recipient. Rows stored before the 2026-11-07 revision may omit
+`senderAddress`; they stay valid and simply do not offer the contact action.
 
 ### 6.2 API
 
@@ -177,6 +191,7 @@ joined from `r:<shareId>`:
   "id": "l8k2m9x1q4",
   "shareId": "f8k2m9x1q4",
   "sentAt": 1762300000000,
+  "senderAddress": "k7m2x9q4p8r3",
   "title": "GUIA: COMO PREPARAR FEIJÃO",
   "stepCount": 12,
   "sender": "Lucas",
@@ -185,20 +200,22 @@ joined from `r:<shareId>`:
 }
 ```
 
-If the share is missing or revoked, `available: false` and the display fields are omitted.
-The app keeps the last known values locally so the row does not disappear.
+If the share is missing or revoked, `available: false` and the recipe display fields are
+omitted; `senderAddress` is still returned when the stored row has it. The app keeps the
+last known values locally so the row does not disappear.
 
 **Send validation.** `POST .../letters`:
 
 1. Verify the sender's secret against `mailbox:<senderAddress>`.
 2. Reject if the recipient has 500 letters (`409 mailbox_full`).
 3. Look up `r:<shareId>` in KV. If missing → `404`, revoked → `410`.
-4. Append `{ id, shareId, sentAt }`; store `idem:letter:<key>` → letter id for 24 h.
-   A retry with the same key returns the existing letter.
+4. Append `{ id, shareId, sentAt, senderAddress }`; store `idem:letter:<key>` → letter id
+   for 24 h. A retry with the same key returns the existing letter.
 5. Return `201 { letter }` with the same joined display fields as the list.
 6. Phase 2: send a push to the recipient's tokens; drop `DeviceNotRegistered` tokens.
 
-The sender address is used only for authentication; it is not stored with the letter.
+The sender address is authenticated on send and stored with the letter so the recipient can
+add the sender to contacts. It is not written to the public share record or profile.
 
 **Rate limits.** Reuse the existing per-IP limiter for the write key:
 
@@ -298,6 +315,10 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
   40–44 dp), sender name, recipe title, step count, relative sent time, gold dot when
   unread. Unavailable letters show "Carta indisponível."
 - Tap: mark read locally (optimistic) → `/r/<shareId>?letter=<letterId>&from=mailbox`.
+- Mailbox letters whose cached row carries `sender_address` show a quiet **Adicionar aos
+  contatos** link under "Carta de <name>" when the sender is not already a contact and the
+  recipe is not the user's own share. One tap confirms and saves the contact; public link
+  imports never show it.
 - Long-press: **Marcar como lida / não lida**, **Remover carta**.
 - Pull-to-refresh; offline shows cached letters + a "Sem conexão" note.
 - Empty: "Nenhuma carta ainda. Compartilhe uma receita com um contato."
@@ -360,11 +381,14 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
 The server stores:
 
 - mailbox metadata: address, display name, seal, secret **hash**, push tokens;
-- letters: `{ letterId, shareId, sentAt }` only.
+- letters: `{ letterId, shareId, sentAt, senderAddress }` only.
 
-The server does **not** store the sender address, title, step count, sender name/seal or
-read state with the letter. It can read the share at list time (as it can today), so the
-recipe content is not protected from the server. Read state never leaves the phone.
+The server does **not** store title, step count, sender name/seal or read state with the
+letter. `senderAddress` is the authenticated sender's public contact code; it is returned
+only to the recipient's authenticated list/send response, never in a public share payload,
+share page or profile. The recipient's app caches it locally to offer **Adicionar aos
+contatos**. The server can read the share at list time (as it can today), so the recipe
+content is not protected from the server. Read state never leaves the phone.
 
 - Addresses are unguessable (31¹² ≈ 7.9×10¹⁷); the secret is a separate read token.
 - Sending requires the app write key **and** the sender's mailbox secret, so a leaked app
@@ -381,11 +405,12 @@ recipe content is not protected from the server. Read state never leaves the pho
 
 To send a letter, someone needs your **mailbox address**. It is 12 random characters, not
 derived from your name, and you only give it to people you trust — like a phone number. A
-stranger cannot guess it. The server cannot block a sender in P1 because it deliberately
-does not record who sent what; if someone you gave the address to becomes a problem, you can
-remove the letter and, if needed, generate a new address and give it to your contacts
-(phase 3). For a two-person notebook this is a non-issue. If a block button ever matters,
-storing the sender address with the letter is the small privacy trade-off to revisit.
+stranger cannot guess it. The server records the authenticated sender address with each
+letter (revision 2026-11-07), so it could support a block list later; P1 exposes no block
+endpoint. If someone you gave the address to becomes a problem, you can remove the letter
+and, if needed, generate a new address and give it to your contacts (phase 3). The at-rest
+sender graph is limited to each recipient's own inbox and is never published. For a
+two-person notebook this is a non-issue.
 
 ## 9. Edge cases
 
@@ -393,7 +418,7 @@ storing the sender address with the letter is the small privacy trade-off to rev
 |---|---|
 | Recipient has no app | Sender uses **Compartilhar link**; the existing web page covers it |
 | Wrong address | Letter goes to whoever owns it; confirm name/seal before sending |
-| Unwanted sender | No server block; remove the letter, or rotate the address (phase 3) |
+| Unwanted sender | No server block; remove the letter, or rotate the address (phase 3). The letter shows the authenticated sender address. |
 | Sender deletes the recipe locally | The share stays live; the letter still opens |
 | Share revoked | Letter remains; opening shows unavailable; list marks `available: false` |
 | Duplicate send / network retry | `X-Idempotency-Key` returns the same letter |
@@ -462,7 +487,7 @@ storing the sender address with the letter is the small privacy trade-off to rev
 | Option | Server stores | Privacy gain | Verdict |
 |---|---|---|---|
 | P0 | recipient, sender, title, steps, `readAt`, blocks | baseline | rejected: unnecessary metadata |
-| **P1** | recipient + `{letterId, shareId, sentAt}`; read local; no blocks; sender not stored | hides read state and at-rest sender graph | **chosen** |
+| **P1** (revised) | recipient + `{letterId, shareId, sentAt, senderAddress}`; read local; no blocks | hides read state and keeps the sender address out of public shares; retains it only in the recipient's inbox for contacts | **chosen** |
 | P2b | ciphertext + recipient | little: metadata re-derivable from the readable share + public profile | rejected: encryption theater |
 | P2 | ciphertext + recipient only | real end-to-end privacy | later: breaks web fallback, WhatsApp preview, link forwarding, dedupe/update |
 | P2c | P2 + signatures | only with out-of-band key pinning | rejected |

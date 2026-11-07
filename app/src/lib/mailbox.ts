@@ -50,7 +50,9 @@ export type MailboxIdentity = {
 /**
  * A letter as cached locally: the server row plus the display fields joined
  * from the share at read time. `senderSeal` is the canonical stored JSON, so it
- * can be written straight into `letters.sender_seal`.
+ * can be written straight into `letters.sender_seal`. `senderAddress` is the
+ * sender's authenticated mailbox address, cached so the letter screen can add
+ * them as a contact without asking the server again.
  */
 export type MailboxLetter = {
   id: string;
@@ -60,6 +62,7 @@ export type MailboxLetter = {
   stepCount: number | null;
   senderName: string | null;
   senderSeal: string | null;
+  senderAddress: string | null;
   available: boolean;
 };
 
@@ -214,6 +217,11 @@ function normalizeSenderName(value: unknown): string | null {
  *
  * An invalid `senderSeal` is decorative and only nulled, never fatal. Anything
  * structural (id, shareId, sentAt, available) rejects the letter.
+ *
+ * `senderAddress` identifies who sent the letter, independently of whether the
+ * share still exists, so it is kept in both the available and unavailable
+ * branches. It is a hint for "add to contacts", never structural: missing,
+ * non-string or malformed values become null.
  */
 export function normalizeLetter(value: unknown): MailboxLetter | null {
   if (!isRecord(value)) return null;
@@ -230,6 +238,10 @@ export function normalizeLetter(value: unknown): MailboxLetter | null {
   const available = value.available;
   if (typeof available !== 'boolean') return null;
 
+  const senderAddress = isValidMailboxAddress(value.senderAddress)
+    ? value.senderAddress
+    : null;
+
   if (!available) {
     // An unavailable letter carries no display data at all: `stepCount` may be
     // absent, so this branch must come before any display-field validation.
@@ -241,6 +253,7 @@ export function normalizeLetter(value: unknown): MailboxLetter | null {
       stepCount: null,
       senderName: null,
       senderSeal: null,
+      senderAddress,
       available: false,
     };
   }
@@ -272,6 +285,7 @@ export function normalizeLetter(value: unknown): MailboxLetter | null {
     stepCount,
     senderName,
     senderSeal,
+    senderAddress,
     available: true,
   };
 }

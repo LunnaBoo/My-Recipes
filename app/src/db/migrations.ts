@@ -59,7 +59,8 @@ export const migrations: Migration[] = [
   {
     // Mailbox (MAILBOX.md §7.1). `mailbox` is a singleton; `letters` is a cache
     // of the server list plus the local read state, which never leaves the
-    // device. The sender address is not stored, matching the server.
+    // device. `sender_address` (v4) is the sender's authenticated mailbox
+    // address, cached so a letter can add them as a contact in one tap.
     version: 3,
     sql: `
       CREATE TABLE IF NOT EXISTS mailbox (
@@ -93,6 +94,15 @@ export const migrations: Migration[] = [
 
       CREATE INDEX IF NOT EXISTS idx_letters_sent_at ON letters(sent_at DESC);
       CREATE INDEX IF NOT EXISTS idx_letters_read_at ON letters(read_at);
+    `,
+  },
+  {
+    // The sender's authenticated mailbox address travels with the letter so the
+    // letter screen can add them as a contact. Additive only: existing rows keep
+    // a null address until their next refresh.
+    version: 4,
+    sql: `
+      ALTER TABLE letters ADD COLUMN sender_address TEXT;
     `,
   },
 ];

@@ -247,9 +247,10 @@ async function writePendingReadIds(db: SqlDatabase, ids: readonly string[]): Pro
  * Display fields and `available` always follow the server, except that a null
  * incoming display field keeps the cached value: an unavailable letter has no
  * title/steps/sender, and blanking those would lose the text the inbox already
- * showed. `read_at` and `received_at` are never overwritten by a refresh. Read
- * ids that arrived in a backup before their letter are applied on insert and
- * then dropped.
+ * showed. `sender_address` follows the same rule: a refresh that omits it must
+ * not erase an address already known. `read_at` and `received_at` are never
+ * overwritten by a refresh. Read ids that arrived in a backup before their
+ * letter are applied on insert and then dropped.
  */
 export async function upsertLetters(letters: readonly MailboxLetter[]): Promise<number> {
   if (letters.length === 0) return 0;
@@ -285,14 +286,15 @@ export async function upsertLetters(letters: readonly MailboxLetter[]): Promise<
       await db.runAsync(
         `INSERT INTO letters (
            letter_id, share_id, title, step_count, sender_name, sender_seal,
-           sent_at, read_at, available, received_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           sender_address, sent_at, read_at, available, received_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(letter_id) DO UPDATE SET
            share_id = excluded.share_id,
            title = COALESCE(excluded.title, letters.title),
            step_count = COALESCE(excluded.step_count, letters.step_count),
            sender_name = COALESCE(excluded.sender_name, letters.sender_name),
            sender_seal = COALESCE(excluded.sender_seal, letters.sender_seal),
+           sender_address = COALESCE(excluded.sender_address, letters.sender_address),
            sent_at = excluded.sent_at,
            available = excluded.available`,
         [
@@ -302,6 +304,7 @@ export async function upsertLetters(letters: readonly MailboxLetter[]): Promise<
           letter.stepCount,
           letter.senderName,
           letter.senderSeal,
+          letter.senderAddress,
           letter.sentAt,
           readAt,
           letter.available ? 1 : 0,

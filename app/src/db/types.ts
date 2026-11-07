@@ -102,6 +102,7 @@ export type LetterRow = {
   step_count: number | null;
   sender_name: string | null;
   sender_seal: string | null;
+  sender_address: string | null;
   sent_at: number;
   read_at: number | null;
   available: number;

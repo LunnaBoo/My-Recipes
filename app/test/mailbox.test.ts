@@ -37,6 +37,7 @@ function letter(overrides: Partial<MailboxLetter> = {}): MailboxLetter {
     stepCount: 12,
     senderName: 'Lucas',
     senderSeal: '{"kind":"sigil","id":"cat"}',
+    senderAddress: ADDRESS,
     available: true,
     ...overrides,
   };
@@ -51,6 +52,7 @@ function rawLetter(overrides: Record<string, unknown> = {}) {
     stepCount: 12,
     sender: 'Lucas',
     senderSeal: { kind: 'sigil', id: 'cat' },
+    senderAddress: ADDRESS,
     available: true,
     ...overrides,
   };
@@ -148,6 +150,7 @@ test('normalizeLetter accepts an unavailable letter and drops stale display data
     stepCount: null,
     senderName: null,
     senderSeal: null,
+    senderAddress: ADDRESS,
     available: false,
   });
 });
@@ -168,6 +171,7 @@ test('normalizeLetter accepts an unavailable letter with no display data', () =>
     stepCount: null,
     senderName: null,
     senderSeal: null,
+    senderAddress: null,
     available: false,
   });
 
@@ -175,6 +179,60 @@ test('normalizeLetter accepts an unavailable letter with no display data', () =>
   assert.equal(normalized?.length, 1);
   assert.equal(normalized?.[0]?.id, LETTER_ID);
   assert.equal(normalized?.[0]?.available, false);
+  assert.equal(normalized?.[0]?.senderAddress, null);
+});
+
+test('normalizeLetter keeps a valid sender address on an available letter', () => {
+  const normalized = normalizeLetter(rawLetter());
+  assert.equal(normalized?.senderAddress, ADDRESS);
+});
+
+test('normalizeLetter nulls a missing, malformed or legacy sender address', () => {
+  // Legacy payloads predate `senderAddress` entirely.
+  assert.equal(normalizeLetter(rawLetter({ senderAddress: undefined }))?.senderAddress, null);
+  assert.equal(normalizeLetter(rawLetter({ senderAddress: null }))?.senderAddress, null);
+
+  const bad: unknown[] = [
+    '',
+    'k7m2x9q4p8r',
+    'k7m2x9q4p8r33',
+    'K7M2X9Q4P8R3',
+    'i7m2x9q4p8r3',
+    'k7m2x9q4p8r!',
+    ' k7m2x9q4p8r3',
+    'https://r.lunna.boo/m/k7m2x9q4p8r3',
+    42,
+    true,
+    {},
+    [],
+  ];
+
+  for (const value of bad) {
+    assert.equal(
+      normalizeLetter(rawLetter({ senderAddress: value }))?.senderAddress,
+      null,
+      JSON.stringify(value),
+    );
+  }
+});
+
+test('normalizeLetter keeps the sender address on an unavailable letter', () => {
+  // The address identifies the sender even after the share is gone, so the
+  // letter screen can still offer "add to contacts".
+  const normalized = normalizeLetter(
+    rawLetter({ available: false, senderAddress: ADDRESS }),
+  );
+  assert.equal(normalized?.available, false);
+  assert.equal(normalized?.senderAddress, ADDRESS);
+
+  const invalid = normalizeLetter(
+    rawLetter({ available: false, senderAddress: 'nope' }),
+  );
+  assert.equal(invalid?.available, false);
+  assert.equal(invalid?.senderAddress, null);
+
+  const missing = normalizeLetter(rawLetter({ available: false, senderAddress: null }));
+  assert.equal(missing?.senderAddress, null);
 });
 
 test('normalizeLetter tolerates missing or decorative fields', () => {

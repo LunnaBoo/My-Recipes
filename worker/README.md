@@ -32,7 +32,7 @@ npm run smoke
 ```
 
 `npm run smoke` starts its own `wrangler dev` on `127.0.0.1:8787`, waits for it
-to be ready, runs the HTTP assertions (212 of them, including the mailbox
+to be ready, runs the HTTP assertions (217 of them, including the mailbox
 suite), prints a PASS/FAIL summary, and always kills the server on exit. It
 supplies a placeholder `APK_URL` and `VERSION_JSON.url` so the download paths
 are exercised end to end.
@@ -125,12 +125,14 @@ letter created by the first attempt for 24 hours.
 
 ### Privacy at rest (P1)
 
-A stored letter is exactly `{ id, shareId, sentAt }`. The mailbox object also
-stores `{ name, seal, sha256(secret) }` and up to three push tokens. It does
-**not** store the sender address, the recipe title/step count, the sender
-name/seal or read state. The list/send responses join the display fields from
-`r:<shareId>` at read time, so a missing or revoked share simply comes back as
-`available: false`. This is metadata minimisation, not end-to-end encryption:
+A stored letter is exactly `{ id, shareId, sentAt, senderAddress }`. The mailbox
+object also stores `{ name, seal, sha256(secret) }` and up to three push tokens.
+It does **not** store the recipe title/step count, the sender name/seal or read
+state. The sender address is kept for the recipient only and returned only on
+the authenticated list/send response; it never appears in a public share
+payload, share page or profile. Old rows without the address stay valid. The
+list/send responses join the display fields from `r:<shareId>` at read time, so
+a missing or revoked share simply comes back as `available: false`. This is metadata minimisation, not end-to-end encryption:
 the recipe body is still readable in KV, exactly like a share link.
 
 ## Deploy runbook
@@ -241,11 +243,14 @@ art whenever the stamps or launcher icon change; do not hand-edit the base64.
   `X-Robots-Tag: noindex, nofollow`.
 - `POST /api/recipes` is limited to 20 writes/hour/IP by a per-IP Durable Object.
   Local requests without `CF-Connecting-IP` are not limited.
-- Mailbox letters are metadata-minimised (P1): the server stores only
-  `{ id, shareId, sentAt }` per letter plus `{ name, seal, sha256(secret) }` and
-  push tokens per mailbox. Sending requires the app key **and** the sender's own
-  secret; reading requires the recipient's secret. Read state never leaves the
-  phone, and there is no server-side block list.
+- Mailbox letters are metadata-minimised (P1, revised 2026-11-07): the server
+  stores `{ id, shareId, sentAt, senderAddress }` per letter plus
+  `{ name, seal, sha256(secret) }` and push tokens per mailbox. The sender
+  address is returned only to the authenticated recipient (for add-to-contacts);
+  public shares, share pages and profiles stay address-free. Sending requires
+  the app key **and** the sender's own secret; reading requires the recipient's
+  secret. Read state never leaves the phone, and there is no server-side block
+  list.
 - A mailbox caps at 500 stored letters and 60 letters/hour/recipient; sending
   also consumes the shared 20 writes/hour/IP budget.
 - `/app/latest.apk` only redirects to an `https:` `APK_URL`.

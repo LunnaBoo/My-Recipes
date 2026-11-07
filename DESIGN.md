@@ -248,6 +248,9 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
   - Large Navy wax-seal (108px) above "Receita de <sender>". The mockup demonstrates a custom photo inside the seal rim.
   - Title (clamped to 2 lines), step count, rendered body.
 - Bottom sticky bar: "Salvar" (primary) / "Descartar" (secondary, Maroon outline).
+- Mailbox letters with the sender's cached address show a quiet centered **Adicionar aos
+  contatos** link under "Carta de <sender>" when they are not already a contact; one tap
+  confirms and saves. Public link imports do not show it.
 - Already-imported state shows a notice and "Ver receita" / "Atualizar cópia" actions.
 - Offline: inline message with retry button, link retained.
 

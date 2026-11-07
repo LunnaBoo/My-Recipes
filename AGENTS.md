@@ -31,7 +31,7 @@ cd app && npx expo config --type public
 
 # worker
 cd worker && npm run check
-cd worker && npm run smoke   # starts local wrangler dev, 212 assertions
+cd worker && npm run smoke   # starts local wrangler dev, 217 assertions
 cd worker && npx wrangler deploy
 
 # release
@@ -80,9 +80,11 @@ gestures) can only be verified on a phone.
   `git config core.hooksPath scripts/git-hooks`.
 - GitHub secret scanning + push protection are enabled on the repo.
 - Share links are unlisted, not private: anyone with the URL can read the recipe.
-- Mailbox (1.5.x): each install has an unguessable address + secret. The Worker stores only
-  `{letterId, shareId, sentAt}` per letter (P1); read state stays on the phone and the sender
-  address is not stored at rest. The secret is stored hashed.
+- Mailbox (1.5.x): each install has an unguessable address + secret. The Worker stores
+  `{letterId, shareId, sentAt, senderAddress}` per letter (P1, revised 2026-11-07). The
+  sender address is returned only to the authenticated recipient so the letter screen can
+  add them to contacts; it never appears in a public share payload, share page, or profile.
+  Read state stays on the phone. The secret is stored hashed.
 
 ## Conventions
 

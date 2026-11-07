@@ -85,8 +85,9 @@ Why a Worker instead of a static host:
 - The `/r/:id` page is the web fallback, so one URL covers both audiences.
 
 v1.5 adds a per-mailbox Durable Object and `/api/mailboxes/*` routes for in-app letters.
-The recipe body still lives in KV; the mailbox stores only `{letterId, shareId, sentAt}`
-(P1). See `MAILBOX.md`.
+The recipe body still lives in KV; the mailbox stores `{letterId, shareId, sentAt,
+senderAddress}` for the recipient only (P1, revised 2026-11-07). The sender address is never
+in a public share payload, share page, or profile. See `MAILBOX.md`.
 
 ### 2.1 One URL, two behaviors (no redirect)
 
@@ -372,6 +373,9 @@ normalized markdown is what gets stored.
   the import screen.
 - Shows: the sender's seal, title, "12 passos", rendered body, "enviado por <sender>".
 - Buttons: **Salvar** (primary) / **Descartar** (secondary). No editing before saving.
+- Mailbox letters with a cached sender address show **Adicionar aos contatos** under the
+  sender line when the sender is not already a contact and the recipe is not the user's own
+  share; one tap confirms and saves. Public link imports do not show it.
 - After Salvar: "Receita salva" + navigate to the recipe.
 - Already imported (`source_share_id` match): "Você já tem esta receita" with **Ver receita**
   and, if the server hash differs, **Atualizar cópia** — never silently overwrite local edits;
@@ -402,8 +406,10 @@ normalized markdown is what gets stored.
   steps/time, gold unread dot). Tapping opens the shared-recipe page with **Salvar /
   Descartar**; `Descartar` returns to the mailbox.
 - Sending a recipe offers **Enviar para um contato** or **Compartilhar link**.
-- P1: the Worker stores only `{letterId, shareId, sentAt}` per letter; read state is local and
-  the sender address is not stored at rest. Push notifications are phase 2.
+- P1 (revised 2026-11-07): the Worker stores `{letterId, shareId, sentAt, senderAddress}` per
+  letter, returned only to the authenticated recipient so the app can add the sender to
+  contacts; read state is local. The address is never in public shares or profiles. Push
+  notifications are phase 2.
 - Full design and API: `MAILBOX.md`.
 
 ---
@@ -438,8 +444,10 @@ normalized markdown is what gets stored.
 - Shares are **unlisted, not private**: anyone with the link can read the recipe. Random 12-char
   ids make guessing impractical, but the link is a bearer token. Say so in the app's about text.
 - The server stores an optional display name/seal, the mailbox address and a secret hash, the
-  letter index (`{letterId, shareId, sentAt}`), and push tokens (phase 2). Recipe bodies stay
-  in the share KV; the mailbox does not copy them. Read state stays on the phone (P1).
+  letter index (`{letterId, shareId, sentAt, senderAddress}`), and push tokens (phase 2). The
+  sender address is returned only to the authenticated recipient and is never published in a
+  share payload, share page, or profile. Recipe bodies stay in the share KV; the mailbox does
+  not copy them. Read state stays on the phone (P1).
 - No analytics. Phase 2 push will use Expo/FCM; no other third-party SDKs.
 - Seals: built-in ids come from a fixed allowlist; uploaded seals are capped at 32 KB, magic-byte
   checked, and served with a server-chosen `Content-Type` plus `nosniff`. SVG is never accepted.

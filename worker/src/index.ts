@@ -483,8 +483,10 @@ async function handleDelete(
 
 /* ------------------------------------------------------------------ *
  * Mailboxes (MAILBOX.md §6). One Durable Object per address; the DO
- * stores only `{ id, shareId, sentAt }` per letter and the display
- * fields are joined from `r:<shareId>` here, for the owner only.
+ * stores `{ id, shareId, sentAt, senderAddress }` per letter and the
+ * display fields are joined from `r:<shareId>` here, for the owner
+ * only. The sender address is never part of a public share payload,
+ * share page, or mailbox profile.
  * ------------------------------------------------------------------ */
 
 type JsonBody =
@@ -540,11 +542,24 @@ function isStoredLetter(value: unknown): value is Letter {
     return false;
   }
   const record = value as Record<string, unknown>;
-  return (
-    typeof record.id === "string" &&
-    typeof record.shareId === "string" &&
-    typeof record.sentAt === "number"
-  );
+  if (
+    typeof record.id !== "string" ||
+    typeof record.shareId !== "string" ||
+    typeof record.sentAt !== "number"
+  ) {
+    return false;
+  }
+  // Old rows predate `senderAddress`; keep them readable. A present value must
+  // still be a valid mailbox address.
+  if (record.senderAddress !== undefined) {
+    if (
+      typeof record.senderAddress !== "string" ||
+      !isValidId(record.senderAddress)
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function parseMailboxProfile(value: Record<string, unknown>): ProfileParse {
@@ -614,9 +629,11 @@ async function requireOwner(
 }
 
 /**
- * Add the display fields the recipient sees. The stored letter stays
- * `{ id, shareId, sentAt }`; a missing or revoked share is simply
- * `available: false` with no display fields (the app keeps its cache).
+ * Add the display fields the recipient sees. The stored letter keeps
+ * `{ id, shareId, sentAt, senderAddress }`; a missing or revoked share is
+ * simply `available: false` with no recipe fields. `senderAddress` is always
+ * returned (when the stored row has it) so the recipient can add the sender
+ * even after the share was revoked or removed.
  */
 async function joinLetter(env: Env, letter: Letter): Promise<LetterView> {
   const lookup = await lookupRecipe(env, letter.shareId);
@@ -625,6 +642,7 @@ async function joinLetter(env: Env, letter: Letter): Promise<LetterView> {
       id: letter.id,
       shareId: letter.shareId,
       sentAt: letter.sentAt,
+      senderAddress: letter.senderAddress,
       available: false,
     };
   }
@@ -632,6 +650,7 @@ async function joinLetter(env: Env, letter: Letter): Promise<LetterView> {
     id: letter.id,
     shareId: letter.shareId,
     sentAt: letter.sentAt,
+    senderAddress: letter.senderAddress,
     title: lookup.recipe.title,
     stepCount: lookup.recipe.stepCount,
     sender: lookup.recipe.sender,
@@ -936,7 +955,7 @@ async function handleMailboxSend(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shareId }),
+      body: JSON.stringify({ shareId, senderAddress }),
     },
   );
 
