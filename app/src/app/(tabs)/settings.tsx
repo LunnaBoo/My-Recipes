@@ -179,12 +179,12 @@ export default function SettingsScreen() {
 
         <View style={styles.card}>
           <Pressable
-            accessibilityLabel={ptBR.mailboxSettingsRow}
+            accessibilityLabel={ptBR.contactsTitle}
             accessibilityRole="button"
             onPress={() => router.push('/mailbox/contacts')}
             style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}
           >
-            <Text style={styles.actionRowLabel}>{ptBR.mailboxSettingsRow}</Text>
+            <Text style={styles.actionRowLabel}>{ptBR.contactsTitle}</Text>
             <Text accessibilityElementsHidden style={styles.chevron}>
               ›
             </Text>

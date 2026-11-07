@@ -287,18 +287,7 @@ export default function MailboxScreen() {
   return (
     <ScreenFrame corners="top" tabs={<FolderTabs active="mailbox" mailboxCount={unread} />}>
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <SectionHeader style={styles.headerTitle} title={ptBR.mailboxHeader} />
-          <Pressable
-            accessibilityLabel={ptBR.contactsTitle}
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={() => router.push('/mailbox/contacts')}
-            style={({ pressed }) => [styles.contactsButton, pressed && styles.pressed]}
-          >
-            <Text style={styles.contactsButtonLabel}>{ptBR.contactsTitle}</Text>
-          </Pressable>
-        </View>
+        <SectionHeader title={ptBR.mailboxHeader} />
       </View>
 
       {offline ? (
@@ -362,31 +351,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerTitle: {
-    flex: 1,
-    marginVertical: 0,
-  },
-  contactsButton: {
-    minHeight: 36,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radii.md,
-  },
-  contactsButtonLabel: {
-    ...theme.typography.button,
-    color: theme.colors.mauveTab,
-    fontSize: 12,
-  },
-  pressed: {
-    opacity: 0.6,
   },
   offlineBanner: {
     marginHorizontal: theme.spacing.lg,

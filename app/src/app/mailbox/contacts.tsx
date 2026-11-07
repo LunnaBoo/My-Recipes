@@ -316,6 +316,7 @@ export default function ContactsScreen() {
             autoCorrect={false}
             onChangeText={setInputAddress}
             placeholder={ptBR.contactAddressPlaceholder}
+            placeholderTextColor={theme.colors.inkLight}
             style={styles.input}
             value={inputAddress}
           />

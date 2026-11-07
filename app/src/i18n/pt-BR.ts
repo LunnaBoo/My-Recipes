@@ -287,7 +287,6 @@ export const ptBR = {
 
   // Settings rows
   trashRow: 'Lixeira',
-  mailboxSettingsRow: 'Caixa de entrada',
 } as const;
 
 export type Strings = typeof ptBR;
