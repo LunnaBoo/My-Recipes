@@ -28,7 +28,7 @@
     // Local `wrangler dev` reads .dev.vars (gitignored; see .dev.vars.example).
     "ASSETLINKS_JSON": "[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"com.lunnaboo.myrecipes\",\"sha256_cert_fingerprints\":[\"75:10:B4:6A:3B:77:E8:34:45:18:B3:94:17:56:23:CB:E1:C7:A5:0E:74:94:9D:C8:F8:4D:FD:04:E2:14:8F:84\"]}}]",
     "APK_URL": "https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk",
-    "VERSION_JSON": "{\"versionCode\":6,\"versionName\":\"1.4.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105231826,\"sha256\":\"4098bbe2a921c2a521e20ccc57da73f5dc544cc6cd107a8c3555c9ed2687885b\",\"notes\":\"Nova visualizacao da receita propria, ramos na lista e ajustes.\"}",
+    "VERSION_JSON": "{\"versionCode\":7,\"versionName\":\"1.5.0\",\"url\":\"https://github.com/LunnaBoo/My-Recipes/releases/latest/download/myrecipes.apk\",\"size\":105351214,\"sha256\":\"62d0777ea033d83d721a324d16a1bb3d4183d5e3dbf2a6d01fe8280fe3203d0b\",\"notes\":\"Cartas: caixa de entrada, contatos e envio no app.\"}",
     "SITE_NAME": "My Recipes"
   }
 }

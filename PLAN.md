@@ -29,7 +29,7 @@ Last updated: 2026-11-06
 - Public at `github.com/LunnaBoo/My-Recipes`. Secret scanning + push protection enabled.
 - `scripts/preflight.sh` runs on pre-push via `core.hooksPath`.
 
-## In progress — 1.5.0 mailbox
+## Mailbox — shipped in 1.5.0
 
 - [x] P1 server mailbox: per-mailbox DO, create/profile/list/send/remove/push-token routes;
       212 smoke assertions.
@@ -37,9 +37,8 @@ Last updated: 2026-11-06
       119 tests.
 - [x] UI: Cartas tab, three compact left-aligned tabs, Lixeira in Ajustes, Trash pushed,
       44 dp seals.
+- [x] Worker deployed; EAS 1.5.0 / versionCode 7 published as a GitHub Release.
 - [ ] Push notifications (phase 2).
-- [ ] Worker deploy: blocked on the Cloudflare workers.dev subdomain (10063).
-- [ ] EAS preview build 1.5.0 / versionCode 7: running.
 
 ## Releases
 
@@ -135,3 +134,4 @@ These have never run on a device and need a phone pass:
 | 1.3.0 | 4 | 2026-11-06 | Wax stamp seals, custom launcher icon. |
 | 1.3.1 | 5 | 2026-11-06 | Larger share-letter seal and Settings preview. |
 | 1.4.0 | 6 | 2026-11-06 | Own-recipe card, home side branches, imported-recipe copy cleanup. |
+| 1.5.0 | 7 | 2026-11-06 | Cartas mailbox: P1 server, Cartas tab, contacts, send/read; Lixeira in Ajustes. |
