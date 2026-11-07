@@ -81,6 +81,9 @@ Shipped across `1.3.0` and `1.4.0`; the unchecked items below move to a later bu
 - [ ] Script to regenerate `worker/src/seals.ts` and `worker/src/appIcon.ts` from the app art.
 - [ ] Share import: log the underlying fetch failure and add a "Copiar link" fallback on the
       offline state.
+- [ ] Paste-import keyboard: apply the editor's KAV pattern (`behavior="padding"` +
+      `keyboardVerticalOffset={insets.top}`); today Android gets no padding, so the action bar
+      sits under the IME.
 
 ### Themes — after v4, deliberately last
 Decided 2026-11-05: two extra themes, built only after the v3/v4 work.
@@ -116,6 +119,9 @@ These have never run on a device and need a phone pass:
 - [ ] Launcher icon under the OEM adaptive mask (art at 62% of the 1024 canvas; reduce to 60% if clipped).
 - [ ] Seal picker cells on wide screens (31% + aspect-ratio leaves a large empty tile at ≥430dp).
 - [ ] Share sheet message format in WhatsApp.
+- [ ] Editor keyboard: with a long body and the caret at the end, the body field shrinks above
+      the IME, the caret stays visible without dragging, and preview mode still scrolls. Check
+      both Android 14 (window resizes) and Android 15/16 (edge-to-edge).
 
 ## Open questions
 

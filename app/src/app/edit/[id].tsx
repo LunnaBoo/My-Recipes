@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import {
-  findNodeHandle,
   Keyboard,
   KeyboardAvoidingView,
   Pressable,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Markdown } from '../../components/Markdown';
@@ -45,6 +45,7 @@ export default function EditRecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const isNew = id === 'new';
+  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -57,44 +58,10 @@ export default function EditRecipeScreen() {
   const [discardOpen, setDiscardOpen] = useState(false);
 
   const bodyRef = useRef<ComponentRef<typeof TextInput>>(null);
-  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [initial, setInitial] = useState({ title: '', body: '' });
-  const [bodyFocused, setBodyFocused] = useState(false);
-  const keyboardHeightRef = useRef(0);
 
   const lastBodyRef = useRef({ text: body, selection });
   lastBodyRef.current = { text: body, selection };
-
-  const scrollBodyIntoView = useCallback(() => {
-    const input = bodyRef.current;
-    const scrollView = scrollViewRef.current;
-    if (!input || !scrollView) return;
-
-    const handle = findNodeHandle(input);
-    if (!handle) return;
-
-    // Scroll so the active input stays clearly above the keyboard.
-    (scrollView as unknown as { scrollResponderScrollNativeHandleToKeyboard?: (
-      node: number,
-      additionalOffset: number,
-      preventNegativeScrollOffset: boolean,
-    ) => void }).scrollResponderScrollNativeHandleToKeyboard?.(handle, 100, true);
-  }, []);
-
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', (event) => {
-      keyboardHeightRef.current = event.endCoordinates.height;
-      if (bodyFocused) scrollBodyIntoView();
-    });
-    const hide = Keyboard.addListener('keyboardDidHide', () => {
-      keyboardHeightRef.current = 0;
-    });
-
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, [bodyFocused, scrollBodyIntoView]);
 
   useEffect(() => {
     if (isNew) {
@@ -212,130 +179,130 @@ export default function EditRecipeScreen() {
 
   return (
     <ScreenFrame>
-      <KeyboardAvoidingView behavior="padding" style={styles.flex}>
-        <View style={styles.topBar}>
-          <Pressable accessibilityRole="button" onPress={requestClose}>
-            <Text style={styles.link}>{ptBR.cancel}</Text>
-          </Pressable>
-
-          <View accessibilityRole="tablist" style={styles.segments}>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: mode === 'edit' }}
-              onPress={() => switchMode('edit')}
-              style={[styles.segment, mode === 'edit' && styles.segmentActive]}
-            >
-              <Text style={[styles.segmentLabel, mode === 'edit' && styles.segmentLabelActive]}>
-                {ptBR.edit}
-              </Text>
+      <KeyboardAvoidingView
+        behavior="padding"
+        // KAV's layout frame is parent-relative; ScreenFrame starts at the top inset.
+        keyboardVerticalOffset={insets.top}
+        style={styles.flex}
+      >
+        <View style={styles.column}>
+          <View style={styles.topBar}>
+            <Pressable accessibilityRole="button" onPress={requestClose}>
+              <Text style={styles.link}>{ptBR.cancel}</Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: mode === 'preview' }}
-              onPress={() => switchMode('preview')}
-              style={[styles.segment, mode === 'preview' && styles.segmentActive]}
-            >
-              <Text
-                style={[styles.segmentLabel, mode === 'preview' && styles.segmentLabelActive]}
+
+            <View accessibilityRole="tablist" style={styles.segments}>
+              <Pressable
+                accessibilityRole="tab"
+                accessibilityState={{ selected: mode === 'edit' }}
+                onPress={() => switchMode('edit')}
+                style={[styles.segment, mode === 'edit' && styles.segmentActive]}
               >
-                {ptBR.previewShort}
-              </Text>
+                <Text style={[styles.segmentLabel, mode === 'edit' && styles.segmentLabelActive]}>
+                  {ptBR.edit}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="tab"
+                accessibilityState={{ selected: mode === 'preview' }}
+                onPress={() => switchMode('preview')}
+                style={[styles.segment, mode === 'preview' && styles.segmentActive]}
+              >
+                <Text
+                  style={[styles.segmentLabel, mode === 'preview' && styles.segmentLabelActive]}
+                >
+                  {ptBR.previewShort}
+                </Text>
+              </Pressable>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: saving || !ready }}
+              disabled={saving || !ready}
+              onPress={() => void save()}
+              style={({ pressed }) => [
+                styles.saveButton,
+                pressed && styles.buttonPressed,
+                (saving || !ready) && styles.buttonDisabled,
+              ]}
+            >
+              <Text style={styles.saveLabel}>{ptBR.save}</Text>
             </Pressable>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: saving || !ready }}
-            disabled={saving || !ready}
-            onPress={() => void save()}
-            style={({ pressed }) => [
-              styles.saveButton,
-              pressed && styles.buttonPressed,
-              (saving || !ready) && styles.buttonDisabled,
-            ]}
-          >
-            <Text style={styles.saveLabel}>{ptBR.save}</Text>
-          </Pressable>
-        </View>
+          <View style={styles.content}>
+            <Text style={styles.fieldLabel}>{ptBR.titleLabel}</Text>
+            <TextInput
+              editable={ready}
+              maxLength={120}
+              onBlur={autosave}
+              onChangeText={setTitle}
+              placeholder={ptBR.titlePlaceholder}
+              placeholderTextColor={theme.colors.inkLight}
+              style={styles.titleInput}
+              value={title}
+            />
 
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          ref={scrollViewRef}
-        >
-          <Text style={styles.fieldLabel}>{ptBR.titleLabel}</Text>
-          <TextInput
-            editable={ready}
-            maxLength={120}
-            onBlur={autosave}
-            onChangeText={setTitle}
-            placeholder={ptBR.titlePlaceholder}
-            placeholderTextColor={theme.colors.inkLight}
-            style={styles.titleInput}
-            value={title}
-          />
+            {mode === 'edit' ? (
+              <View style={styles.editArea}>
+                <ScrollView
+                  contentContainerStyle={styles.toolbarContent}
+                  horizontal
+                  keyboardShouldPersistTaps="always"
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.toolbar}
+                >
+                  {TOOLBAR.map((item) => (
+                    <Pressable
+                      accessibilityLabel={item.hint}
+                      accessibilityRole="button"
+                      key={item.action}
+                      onPress={() => apply(item.action)}
+                      style={({ pressed }) => [
+                        styles.toolButton,
+                        pressed && styles.buttonPressed,
+                      ]}
+                    >
+                      <Text style={styles.toolLabel}>{item.label}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
 
-          {mode === 'edit' ? (
-            <>
+                <TextInput
+                  editable={ready}
+                  multiline
+                  onBlur={autosave}
+                  onChangeText={handleBodyChange}
+                  onSelectionChange={(event) => {
+                    setSelection(event.nativeEvent.selection);
+                    if (pendingSelection) setPendingSelection(null);
+                  }}
+                  placeholder={ptBR.bodyPlaceholder}
+                  placeholderTextColor={theme.colors.inkLight}
+                  ref={bodyRef}
+                  selection={pendingSelection ?? undefined}
+                  style={styles.bodyInput}
+                  textAlignVertical="top"
+                  value={body}
+                />
+              </View>
+            ) : (
               <ScrollView
-                contentContainerStyle={styles.toolbarContent}
-                horizontal
-                keyboardShouldPersistTaps="always"
-                showsHorizontalScrollIndicator={false}
-                style={styles.toolbar}
+                contentContainerStyle={styles.previewScrollContent}
+                style={styles.previewScroll}
               >
-                {TOOLBAR.map((item) => (
-                  <Pressable
-                    accessibilityLabel={item.hint}
-                    accessibilityRole="button"
-                    key={item.action}
-                    onPress={() => apply(item.action)}
-                    style={({ pressed }) => [
-                      styles.toolButton,
-                      pressed && styles.buttonPressed,
-                    ]}
-                  >
-                    <Text style={styles.toolLabel}>{item.label}</Text>
-                  </Pressable>
-                ))}
+                <View style={styles.preview}>
+                  {body.trim() ? (
+                    <Markdown markdown={body} />
+                  ) : (
+                    <Text style={styles.previewEmpty}>{ptBR.previewEmpty}</Text>
+                  )}
+                </View>
               </ScrollView>
-
-              <TextInput
-                editable={ready}
-                multiline
-                onBlur={() => {
-                  setBodyFocused(false);
-                  autosave();
-                }}
-                onChangeText={handleBodyChange}
-                onFocus={() => {
-                  setBodyFocused(true);
-                  scrollBodyIntoView();
-                }}
-                onSelectionChange={(event) => {
-                  setSelection(event.nativeEvent.selection);
-                  if (pendingSelection) setPendingSelection(null);
-                }}
-                placeholder={ptBR.bodyPlaceholder}
-                placeholderTextColor={theme.colors.inkLight}
-                ref={bodyRef}
-                selection={pendingSelection ?? undefined}
-                style={styles.bodyInput}
-                textAlignVertical="top"
-                value={body}
-              />
-            </>
-          ) : (
-            <View style={styles.preview}>
-              {body.trim() ? (
-                <Markdown markdown={body} />
-              ) : (
-                <Text style={styles.previewEmpty}>{ptBR.previewEmpty}</Text>
-              )}
-            </View>
-          )}
-        </ScrollView>
+            )}
+          </View>
+        </View>
       </KeyboardAvoidingView>
 
       <ConfirmDialog
@@ -366,6 +333,9 @@ export default function EditRecipeScreen() {
 
 const styles = StyleSheet.create({
   flex: {
+    flex: 1,
+  },
+  column: {
     flex: 1,
   },
   topBar: {
@@ -429,6 +399,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   content: {
+    flex: 1,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
     paddingBottom: theme.spacing.xxl,
@@ -448,9 +419,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     minHeight: 48,
   },
+  editArea: {
+    flex: 1,
+    gap: theme.spacing.sm,
+  },
   toolbar: {
     flexGrow: 0,
-    marginTop: theme.spacing.xs,
   },
   toolbarContent: {
     gap: theme.spacing.sm,
@@ -479,9 +453,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.tan,
     padding: theme.spacing.md,
-    minHeight: 320,
+    flex: 1,
+  },
+  previewScroll: {
+    flex: 1,
+  },
+  previewScrollContent: {
+    flexGrow: 1,
   },
   preview: {
+    flex: 1,
     minHeight: 320,
     padding: theme.spacing.md,
     borderRadius: theme.radii.md,
