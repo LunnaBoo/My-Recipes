@@ -343,10 +343,11 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
 
 - Reuse `app/r/[id].tsx`; add optional `letter` and `from` params.
 - On mount with `letter`: mark read locally (best effort).
-- Mailbox letters whose cached row carries `sender_address` show a quiet **Adicionar aos
-  contatos** link under "Carta de <name>" when the sender is not already a contact and the
-  recipe is not the user's own share. One tap confirms and adds the sender with the name
-  and seal already shown. Public link imports never show it.
+- Mailbox letters whose cached row carries `sender_address` show a quiet, centered
+  **Adicionar aos contatos** link at the bottom of the letter card, below the recipe body,
+  when the sender is not already a contact and the recipe is not the user's own share. One
+  tap confirms and adds the sender with the name and seal already shown. Public link
+  imports never show it.
 - `Salvar` → save the independent copy, navigate to the recipe; the letter stays.
 - `Descartar` → return to the mailbox (because `from=mailbox`); the letter stays until
   explicitly removed.

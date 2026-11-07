@@ -373,9 +373,10 @@ normalized markdown is what gets stored.
   the import screen.
 - Shows: the sender's seal, title, "12 passos", rendered body, "enviado por <sender>".
 - Buttons: **Salvar** (primary) / **Descartar** (secondary). No editing before saving.
-- Mailbox letters with a cached sender address show **Adicionar aos contatos** under the
-  sender line when the sender is not already a contact and the recipe is not the user's own
-  share; one tap confirms and saves. Public link imports do not show it.
+- Mailbox letters with a cached sender address show **Adicionar aos contatos** at the bottom
+  of the letter, below the recipe body, when the sender is not already a contact and the
+  recipe is not the user's own share; one tap confirms and saves. Public link imports do not
+  show it.
 - After Salvar: "Receita salva" + navigate to the recipe.
 - Already imported (`source_share_id` match): "Você já tem esta receita" with **Ver receita**
   and, if the server hash differs, **Atualizar cópia** — never silently overwrite local edits;

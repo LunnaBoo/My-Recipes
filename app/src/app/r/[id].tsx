@@ -363,6 +363,15 @@ export default function SharedRecipeScreen() {
             {share.sender ? ptBR.letterFrom(share.sender) : ptBR.sharedRecipe}
           </Text>
 
+          <Text numberOfLines={2} style={styles.title}>
+            {share.title}
+          </Text>
+          <Text style={styles.meta}>{ptBR.stepsLabel(share.stepCount)}</Text>
+
+          <View style={styles.rule} />
+
+          <Markdown markdown={share.body} />
+
           {showAddSender && share.sender ? (
             <Pressable
               accessibilityRole="button"
@@ -373,15 +382,6 @@ export default function SharedRecipeScreen() {
               <Text style={styles.addSenderLabel}>{ptBR.addSenderToContacts}</Text>
             </Pressable>
           ) : null}
-
-          <Text numberOfLines={2} style={styles.title}>
-            {share.title}
-          </Text>
-          <Text style={styles.meta}>{ptBR.stepsLabel(share.stepCount)}</Text>
-
-          <View style={styles.rule} />
-
-          <Markdown markdown={share.body} />
         </View>
 
         {own ? (
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
   },
   addSenderLabel: {
     ...theme.typography.button,
