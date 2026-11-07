@@ -183,8 +183,8 @@ mailbox owner token. `profile` is public by address.
 
 There is **no** `POST .../read` endpoint and **no** blocks endpoints. Read state is local.
 
-**List response.** Each item is the stored `{ id, shareId, sentAt }` plus display fields
-joined from `r:<shareId>`:
+**List response.** Each item is the stored `{ id, shareId, sentAt, senderAddress }` plus
+display fields joined from `r:<shareId>`:
 
 ```json
 {
@@ -234,7 +234,7 @@ add the sender to contacts. It is not written to the public share record or prof
 
 ## 7. App design
 
-### 7.1 Local schema (migration v3)
+### 7.1 Local schema (migrations v3–v4)
 
 ```sql
 CREATE TABLE IF NOT EXISTS mailbox (
@@ -267,9 +267,16 @@ CREATE TABLE IF NOT EXISTS letters (
 );
 CREATE INDEX IF NOT EXISTS idx_letters_sent_at ON letters(sent_at DESC);
 CREATE INDEX IF NOT EXISTS idx_letters_read_at ON letters(read_at);
+
+-- migration v4 (additive): sender's authenticated mailbox address
+ALTER TABLE letters ADD COLUMN sender_address TEXT;
 ```
 
-`letters` is a cache of the server list plus the local read state. On mailbox focus:
+Migration v3 creates the three tables. v4 appends `sender_address`, the sender's
+authenticated mailbox address, so a letter can offer **Adicionar aos contatos**. Rows
+cached before v4 keep a null address until a refresh returns one, and a refresh that omits
+`senderAddress` never clears an address the app already has. `letters` is a cache of the
+server list plus the local read state. On mailbox focus:
 
 1. `GET /letters` (newest first, `before`/`limit`; default 50, max 100).
 2. Upsert by `letter_id`, update display fields and `available`; keep the last known
@@ -283,8 +290,8 @@ action (open tab, add contact, or send), not on launch.
 
 ### 7.2 Modules
 
-- `src/lib/mailbox.ts` — pure: address/secret format, letter normalization, unread count,
-  contact validation, backup identity rules.
+- `src/lib/mailbox.ts` — pure: address/secret format, letter normalization (including the
+  cached `senderAddress`), unread count, contact validation, backup identity rules.
 - `src/lib/mailboxApi.ts` — HTTP calls (register, profile, list, send, remove, push token).
 - `src/db/mailboxRepository.ts` — SQL for `mailbox`, `contacts`, `letters`.
 - `src/lib/newMailboxId.ts` — CSPRNG address + secret; **no `Math.random` fallback**.
@@ -315,10 +322,6 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
   40–44 dp), sender name, recipe title, step count, relative sent time, gold dot when
   unread. Unavailable letters show "Carta indisponível."
 - Tap: mark read locally (optimistic) → `/r/<shareId>?letter=<letterId>&from=mailbox`.
-- Mailbox letters whose cached row carries `sender_address` show a quiet **Adicionar aos
-  contatos** link under "Carta de <name>" when the sender is not already a contact and the
-  recipe is not the user's own share. One tap confirms and saves the contact; public link
-  imports never show it.
 - Long-press: **Marcar como lida / não lida**, **Remover carta**.
 - Pull-to-refresh; offline shows cached letters + a "Sem conexão" note.
 - Empty: "Nenhuma carta ainda. Compartilhe uma receita com um contato."
@@ -340,6 +343,10 @@ The app moves from **Receitas / Lixeira / Ajustes** to **Receitas / Cartas / Aju
 
 - Reuse `app/r/[id].tsx`; add optional `letter` and `from` params.
 - On mount with `letter`: mark read locally (best effort).
+- Mailbox letters whose cached row carries `sender_address` show a quiet **Adicionar aos
+  contatos** link under "Carta de <name>" when the sender is not already a contact and the
+  recipe is not the user's own share. One tap confirms and adds the sender with the name
+  and seal already shown. Public link imports never show it.
 - `Salvar` → save the independent copy, navigate to the recipe; the letter stays.
 - `Descartar` → return to the mailbox (because `from=mailbox`); the letter stays until
   explicitly removed.
@@ -418,7 +425,7 @@ two-person notebook this is a non-issue.
 |---|---|
 | Recipient has no app | Sender uses **Compartilhar link**; the existing web page covers it |
 | Wrong address | Letter goes to whoever owns it; confirm name/seal before sending |
-| Unwanted sender | No server block; remove the letter, or rotate the address (phase 3). The letter shows the authenticated sender address. |
+| Unwanted sender | No server block; remove the letter, or rotate the address (phase 3). The letter exposes the authenticated sender address through **Adicionar aos contatos**. |
 | Sender deletes the recipe locally | The share stays live; the letter still opens |
 | Share revoked | Letter remains; opening shows unavailable; list marks `available: false` |
 | Duplicate send / network retry | `X-Idempotency-Key` returns the same letter |
@@ -434,7 +441,8 @@ two-person notebook this is a non-issue.
 
 ## 10. Backup and migration
 
-- Migrations are additive: v3 adds `mailbox`, `contacts`, `letters`.
+- Migrations are additive: v3 adds `mailbox`, `contacts`, `letters`; v4 adds
+  `letters.sender_address` (nullable, old rows stay valid).
 - Backup zip gains optional entries (format stays v1, unknown entries are ignored by
   `parseIndex`):
   - `profile.json` → `{ displayName, seal, mailbox: { address, secret } | null }`

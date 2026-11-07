@@ -52,7 +52,6 @@ curl -sS -X POST "$BASE/api/recipes" \
   --data-binary '{
     "title": "GUIA: COMO PREPARAR FEIJÃO",
     "body": "1. Coloque 1 batata grande.\n2. Cozinhe.\n3. Seja feliz.",
-    "tags": ["feijao", "brasileiro"],
     "sender": "Lucas"
   }'
 

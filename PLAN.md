@@ -32,9 +32,9 @@ Last updated: 2026-11-07
 ## Mailbox — shipped in 1.5.0
 
 - [x] P1 server mailbox: per-mailbox DO, create/profile/list/send/remove/push-token routes;
-      212 smoke assertions.
+      212 smoke assertions at 1.5.0 (217 today, after the sender-address revision).
 - [x] App data: mailbox/contacts/letters schema, API client, backup identity + read state;
-      119 tests.
+      119 tests at 1.5.0 (142 today).
 - [x] UI: Cartas tab, three compact left-aligned tabs, Lixeira in Ajustes, Trash pushed,
       44 dp seals.
 - [x] Worker deployed; EAS 1.5.0 / versionCode 7 published as a GitHub Release.

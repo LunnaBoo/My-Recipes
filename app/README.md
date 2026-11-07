@@ -3,9 +3,9 @@
 Local-first recipe notebook for Android. React Native + Expo (SDK 58), TypeScript,
 Expo Router, SQLite/FTS5, and plain Markdown files on disk.
 
-This lane scaffolds the app shell, data layer, paste-import parser, and the plain UI
-structure. Parchment ornaments, sender seals, sharing, trash screens, and settings are
-not implemented yet.
+The app implements the v1 surface — parchment shell, recipe list and editor, paste-import,
+sharing, the **Cartas** mailbox, trash, and settings — plus backup export/import and the
+in-app updater. Current release: 1.5.3 (versionCode 10).
 
 ## Prerequisites
 
@@ -57,14 +57,15 @@ fingerprint for verification to succeed.
 
 ```
 src/app/          Expo Router routes (src/app is supported directly)
-src/components/   ScreenFrame — the plain shell the parchment layer will replace
-src/db/           SQLite schema, migrations, FTS5 detection, repository
+src/components/   ScreenFrame (parchment shell), ActionBar, ActionSheet, ConfirmDialog, Seal
+src/db/           SQLite schema, migrations, FTS5 detection, repositories (recipes + mailbox)
 src/storage/      Markdown bodies at <documentDirectory>/recipes/<id>.md
-src/lib/          Pure, unit-tested logic (step count, paste-import, SHA-256, UUID)
+src/lib/          Pure, unit-tested logic (step count, paste-import, numbered lists, seals,
+                  sharing, mailbox, backup, updater)
 src/theme/        DESIGN.md tokens
 src/fonts/        useAppFonts()
 src/i18n/         pt-BR strings
-test/             node:test suites
+test/             node:test suites (142 tests)
 ```
 
 SQLite stores the index only; the Markdown files are the source of truth. Search uses

@@ -15,7 +15,7 @@ A cozy, quest-journal notebook for two people in a kitchen. The UI reads like an
 | Olive | `#6B7A3A` | Header ivy, decorative green accents. |
 | Olive Tab | `#4A5A28` | Tab 1 (Receitas), primary buttons, FAB (Cream text). |
 | Mauve | `#8B6F8F` | Decorative secondary accents. |
-| Mauve Tab | `#5F435F` | Tab 2 (Lixeira) (Cream text). |
+| Mauve Tab | `#5F435F` | Tab 2 (Cartas) (Cream text). |
 | Tan | `#C4A87A` | Borders, warm neutral accents. |
 | Tan Tab | `#7A5F3A` | Tab 3 (Ajustes) (Cream text). |
 | Gold | `#D4A94A` | Pinned sparkle, accent stars, primary CTA highlights, selected seal cell border. |
@@ -286,6 +286,9 @@ Fallback stack: `Georgia, "Times New Roman", serif`.
 - Inbox rows: 44 dp sender seal, "Carta de <name>", title, steps/time, gold unread dot.
 - Empty: "Nenhuma carta ainda."
 - Tapping opens the shared-recipe page; long-press marks read/unread or removes.
+- The opened letter may show the quiet **Adicionar aos contatos** link (§5.5) when the
+  cached row carries the sender's authenticated address, the sender name exists, and they
+  are not already a contact. Public link imports never show it.
 
 ## 6. React Native implementation notes
 
